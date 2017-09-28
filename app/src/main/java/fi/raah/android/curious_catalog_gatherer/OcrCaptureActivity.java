@@ -25,6 +25,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
@@ -47,7 +48,13 @@ import fi.raah.android.curious_catalog_gatherer.ui.camera.GraphicOverlay;
 
 import com.google.android.gms.vision.text.TextRecognizer;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Activity for the Ocr Detecting app.  This app detects text and displays the value with the
@@ -79,6 +86,24 @@ public final class OcrCaptureActivity extends AppCompatActivity {
     // A TextToSpeech engine for speaking a String value.
     private TextToSpeech tts;
 
+    //TODO refactor out of here
+    private HashMap<String, Set<String>> allCards = new HashMap<>();
+
+    private Set<String> cardNames(AssetManager assetManager, String fileName) throws IOException {
+        InputStream inputStream = assetManager.open("cards/" + fileName);
+        BufferedReader in = new BufferedReader(new InputStreamReader(inputStream));
+        String line = null;
+        HashSet<String> cardNames = new HashSet<>();
+        while((line = in.readLine()) != null) {
+            cardNames.add(line);
+            //for (String cardName : cardNames) {
+            //    Log.d("CCG", "CARD NAME: " + cardName);
+            //}
+        }
+
+        return cardNames;
+    }
+
     /**
      * Initializes the UI and creates the detector pipeline.
      */
@@ -94,6 +119,17 @@ public final class OcrCaptureActivity extends AppCompatActivity {
         boolean autoFocus = true;
         boolean useFlash = false;
 
+//        AssetManager assetManager = getAssets();
+//        try {
+//            String[] assets = assetManager.list("cards");
+//            Log.d("CCG", "Assets: " + assets[0]);
+//
+//            for (String asset : assets) {
+//                allCards.put(asset, cardNames(assetManager, asset));
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
         // Check for the camera permission before accessing the camera.  If the
         // permission is not granted yet, request permission.
         int rc = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
