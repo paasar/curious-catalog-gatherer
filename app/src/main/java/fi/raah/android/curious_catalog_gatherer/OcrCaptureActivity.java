@@ -106,7 +106,7 @@ public final class OcrCaptureActivity extends AppCompatActivity {
         gestureDetector = new GestureDetector(this, new CaptureGestureListener());
         scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
 
-        Snackbar.make(mGraphicOverlay, "Pinch/Stretch to zoom",
+        Snackbar.make(mGraphicOverlay, "Tap to refocus. Pinch/Stretch to zoom",
                 Snackbar.LENGTH_LONG)
                 .show();
     }
@@ -303,31 +303,9 @@ public final class OcrCaptureActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * onTap is called to speak the tapped TextBlock, if any, out loud.
-     *
-     * @param rawX - the raw position of the tap
-     * @param rawY - the raw position of the tap.
-     * @return true if the tap was on a TextBlock
-     */
     private boolean onTap(float rawX, float rawY) {
+        mCameraSource.autoFocus(null);
         return false;
-//        OcrGraphic graphic = mGraphicOverlay.getGraphicAtLocation(rawX, rawY);
-//        TextBlock text = null;
-//        if (graphic != null) {
-//            text = graphic.getTextBlock();
-//            if (text != null && text.getValue() != null) {
-//                Log.d(TAG, "text data is being spoken! " + text.getValue());
-//                // TODO: Speak the string.
-//            }
-//            else {
-//                Log.d(TAG, "text data is null");
-//            }
-//        }
-//        else {
-//            Log.d(TAG,"no text detected");
-//        }
-//        return text != null;
     }
 
     private class CaptureGestureListener extends GestureDetector.SimpleOnGestureListener {
