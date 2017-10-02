@@ -24,8 +24,10 @@
             android:name="com.google.android.gms.vision.DEPENDENCIES"
             android:value="ocr" />
 
-        <activity android:name="fi.raah.android.curious_catalog_gatherer.OcrCaptureActivity"
-            android:label="Curious Catalog Gatherer">
+        <activity
+            android:name="fi.raah.android.curious_catalog_gatherer.OcrCaptureActivity"
+            android:label="Curious Catalog Gatherer"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
