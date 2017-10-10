@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_owners_history"
+        android:orderInCategory="100"
+        android:title="Owners history"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_owners_overlay"
+        android:orderInCategory="200"
+        android:title="Owners overlay"
+        android:icon="@drawable/icon"
+        app:showAsAction="ifRoom" />
+</menu>
