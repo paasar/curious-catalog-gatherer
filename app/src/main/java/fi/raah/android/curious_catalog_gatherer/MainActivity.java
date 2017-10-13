@@ -30,6 +30,9 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -54,8 +57,8 @@ import fi.raah.android.curious_catalog_gatherer.ui.camera.GraphicOverlay;
  * rear facing camera. During detection overlay graphics are drawn to indicate the position,
  * size, and contents of each TextBlock.
  */
-public final class OcrCaptureActivity extends AppCompatActivity {
-    private static final String TAG = "OcrCaptureActivity";
+public final class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
 
     // Intent request code to handle updating play services if needed.
     private static final int RC_HANDLE_GMS = 9001;
@@ -90,8 +93,14 @@ public final class OcrCaptureActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_owners_history) {
-            return true;
+        if (id == R.id.action_owners_overlay) {
+            Fragment fragment = new OwnersOverlayFragment();
+
+            FragmentManager fm = getSupportFragmentManager();
+            FragmentTransaction ft = fm.beginTransaction();
+            ft.replace(R.id.fragment_container, fragment);
+            ft.commit();
+            //TODO addToBackStack()
         }
 
         return super.onOptionsItemSelected(item);
@@ -103,7 +112,7 @@ public final class OcrCaptureActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
-        setContentView(R.layout.curious_catalog_gatherer);
+        setContentView(R.layout.main_activity);
 
         mPreview = (CameraSourcePreview) findViewById(R.id.preview);
         mGraphicOverlay = (GraphicOverlay<GraphicOverlay.Graphic>) findViewById(R.id.graphicOverlay);

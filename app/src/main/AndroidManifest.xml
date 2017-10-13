@@ -25,7 +25,7 @@
             android:value="ocr" />
 
         <activity
-            android:name="fi.raah.android.curious_catalog_gatherer.OcrCaptureActivity"
+            android:name="fi.raah.android.curious_catalog_gatherer.MainActivity"
             android:label="Curious Catalog Gatherer"
             android:screenOrientation="portrait">
             <intent-filter>
