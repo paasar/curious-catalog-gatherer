@@ -20,6 +20,7 @@ import android.util.SparseArray;
 
 import fi.raah.android.curious_catalog_gatherer.http.AsyncJsonHttpResponseHandler;
 import fi.raah.android.curious_catalog_gatherer.http.CatalogClient;
+import fi.raah.android.curious_catalog_gatherer.model.Ownage;
 import fi.raah.android.curious_catalog_gatherer.ui.camera.GraphicOverlay;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.text.TextBlock;
@@ -28,6 +29,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 
 import org.json.*;
@@ -40,10 +42,12 @@ import cz.msebera.android.httpclient.Header;
  */
 public class OcrDetectorProcessor implements Detector.Processor<TextBlock> {
 
+    private final OwnersListener ownersListener;
     private GraphicOverlay<GraphicOverlay.Graphic> mGraphicOverlay;
 
-    OcrDetectorProcessor(GraphicOverlay<GraphicOverlay.Graphic> ocrGraphicOverlay) {
+    OcrDetectorProcessor(GraphicOverlay<GraphicOverlay.Graphic> ocrGraphicOverlay, OwnersListener ownersListener) {
         mGraphicOverlay = ocrGraphicOverlay;
+        this.ownersListener = ownersListener;
     }
 
     private void getOwnerData(String item) throws JSONException {
@@ -56,24 +60,28 @@ public class OcrDetectorProcessor implements Detector.Processor<TextBlock> {
                     Log.d("CCG", "It was an object! " + response);
 
 
-                    ArrayList<String> ownageList = new ArrayList<String>();
+                    List<Ownage> ownageList = new ArrayList<>();
+//                    ArrayList<String> ownageList = new ArrayList<String>();
                     Iterator<String> keys = response.keys();
                     while(keys.hasNext()) {
                         String key = keys.next();
-                        ownageList.add(key);
+                        Log.d("CCG", "key " + key);
+//                        ownageList.add(key);//card name
                         try {
                             JSONArray owners = (JSONArray)response.get(key);
                             for (int i = 0; i < owners.length(); i++) {
                                 JSONObject owner = (JSONObject)owners.get(i);
-                                ownageList.add(owner.get("username") + " " + owner.get("ownedCount"));
+                                ownageList.add(new Ownage(owner.getString("username"), owner.getInt("ownedCount"), owner.getString("blockName")));
                             }
                         } catch (JSONException e) {
                             Log.e("CCG", "ERROR: " + e.getMessage());
                         }
                     }
 
-                    TextGraphic textGraphic = new TextGraphic(mGraphicOverlay, ownageList);
-                    mGraphicOverlay.add(textGraphic);
+
+                    ownersListener.updateOwners(ownageList);
+//                    TextGraphic textGraphic = new TextGraphic(mGraphicOverlay, ownageList);
+//                    mGraphicOverlay.add(textGraphic);
                 }
 
                 @Override

@@ -47,7 +47,9 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.vision.text.TextRecognizer;
 
 import java.io.IOException;
+import java.util.List;
 
+import fi.raah.android.curious_catalog_gatherer.model.Ownage;
 import fi.raah.android.curious_catalog_gatherer.ui.camera.CameraSource;
 import fi.raah.android.curious_catalog_gatherer.ui.camera.CameraSourcePreview;
 import fi.raah.android.curious_catalog_gatherer.ui.camera.GraphicOverlay;
@@ -57,7 +59,7 @@ import fi.raah.android.curious_catalog_gatherer.ui.camera.GraphicOverlay;
  * rear facing camera. During detection overlay graphics are drawn to indicate the position,
  * size, and contents of each TextBlock.
  */
-public final class MainActivity extends AppCompatActivity {
+public final class MainActivity extends AppCompatActivity implements OwnersListener {
     private static final String TAG = "MainActivity";
 
     // Intent request code to handle updating play services if needed.
@@ -78,6 +80,9 @@ public final class MainActivity extends AppCompatActivity {
     // Helper objects for detecting taps and pinches.
     private GestureDetector gestureDetector;
 
+    //TODO Dagger
+    private OwnersOverlayFragment ownersOverlayFragment = new OwnersOverlayFragment();
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -92,13 +97,14 @@ public final class MainActivity extends AppCompatActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
+        //TODO hide when clicked again
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_owners_overlay) {
-            Fragment fragment = new OwnersOverlayFragment();
+            //TODO add only once?
 
             FragmentManager fm = getSupportFragmentManager();
             FragmentTransaction ft = fm.beginTransaction();
-            ft.replace(R.id.fragment_container, fragment);
+            ft.replace(R.id.fragment_container, ownersOverlayFragment);
             ft.commit();
             //TODO addToBackStack()
         }
@@ -191,7 +197,7 @@ public final class MainActivity extends AppCompatActivity {
         // Create the TextRecognizer
         TextRecognizer textRecognizer = new TextRecognizer.Builder(context).build();
         // Set the TextRecognizer's Processor.
-        textRecognizer.setProcessor(new OcrDetectorProcessor(mGraphicOverlay));
+        textRecognizer.setProcessor(new OcrDetectorProcessor(mGraphicOverlay, this));
         // Check if the TextRecognizer is operational.
         if (!textRecognizer.isOperational()) {
             Log.w(TAG, "Detector dependencies are not yet available.");
@@ -338,5 +344,20 @@ public final class MainActivity extends AppCompatActivity {
         public boolean onSingleTapConfirmed(MotionEvent e) {
             return onTap(e.getRawX(), e.getRawY()) || super.onSingleTapConfirmed(e);
         }
+    }
+
+    @Override
+    public void updateOwners(final List<Ownage> ownageList) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (!ownageList.isEmpty()) {
+                    Log.d("CCG", ownageList.toString());
+                    ownersOverlayFragment.updateOwnageList(ownageList);
+                } else {
+                    Log.d("CCG", "Empty ownage list!");
+                }
+            }
+        });
     }
 }
