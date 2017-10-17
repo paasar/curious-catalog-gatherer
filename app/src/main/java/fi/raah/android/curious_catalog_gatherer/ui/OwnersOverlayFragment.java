@@ -1,30 +1,41 @@
-package fi.raah.android.curious_catalog_gatherer;
+package fi.raah.android.curious_catalog_gatherer.ui;
 
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import fi.raah.android.curious_catalog_gatherer.R;
+import fi.raah.android.curious_catalog_gatherer.model.CardOwners;
 import fi.raah.android.curious_catalog_gatherer.model.Ownage;
 
 public class OwnersOverlayFragment extends ListFragment {
+
+    private TextView cardNameView;
 
     private List<Ownage> ownageList = new ArrayList<>();
     private ArrayAdapter<Ownage> adapter;
 
     @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle inState) {
+        View view = inflater.inflate(R.layout.owners_overlay_fragment, container, false);
+        cardNameView = (TextView)view.findViewById(R.id.card_name);
+
+        return view;
+    }
+
+    @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        ownageList.add(new Ownage("laa", 1, "blaa"));
-        ownageList.add(new Ownage("laa2", 1, "blaa"));
-        ownageList.add(new Ownage("laa3", 1, "blaa"));
-        ownageList.add(new Ownage("laa4", 1, "blaa"));
-        ownageList.add(new Ownage("laa5", 1, "blaa"));
-//        ownageList.add(new Ownage("EMPTY", 0, ""));
+
         adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, ownageList);
         setListAdapter(adapter);
     }
@@ -34,11 +45,14 @@ public class OwnersOverlayFragment extends ListFragment {
 
     }
 
-    public void updateOwnageList(List<Ownage> ownageList) {
+    public void updateOwnageList(CardOwners cardOwners) {
         if (adapter == null) return;
 
+        cardNameView.setText(cardOwners.getCardName());
+
         this.ownageList.clear();
-        this.ownageList.addAll(ownageList);
+        //TODO empty list -> "no owners" or empty view?
+        this.ownageList.addAll(cardOwners.getOwnageList());
         adapter.notifyDataSetChanged();
     }
 }

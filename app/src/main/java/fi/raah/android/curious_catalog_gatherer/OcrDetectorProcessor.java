@@ -20,6 +20,7 @@ import android.util.SparseArray;
 
 import fi.raah.android.curious_catalog_gatherer.http.AsyncJsonHttpResponseHandler;
 import fi.raah.android.curious_catalog_gatherer.http.CatalogClient;
+import fi.raah.android.curious_catalog_gatherer.model.CardOwners;
 import fi.raah.android.curious_catalog_gatherer.model.Ownage;
 import fi.raah.android.curious_catalog_gatherer.ui.camera.GraphicOverlay;
 import com.google.android.gms.vision.Detector;
@@ -51,7 +52,6 @@ public class OcrDetectorProcessor implements Detector.Processor<TextBlock> {
     }
 
     private void getOwnerData(String item) throws JSONException {
-//        CatalogClient.get("/api/v1/cards-advanced?criteria=" + item, null, new JsonHttpResponseHandler() {
         try {
             CatalogClient.get("/ext/api/card-owners?cardName=" + URLEncoder.encode(item, "UTF-8"), null, new AsyncJsonHttpResponseHandler() {
                 @Override
@@ -59,14 +59,16 @@ public class OcrDetectorProcessor implements Detector.Processor<TextBlock> {
                     // If the response is JSONObject instead of expected JSONArray
                     Log.d("CCG", "It was an object! " + response);
 
-
+                    //TODO No owners found.
+                    String cardName = "N/A";
                     List<Ownage> ownageList = new ArrayList<>();
-//                    ArrayList<String> ownageList = new ArrayList<String>();
+
                     Iterator<String> keys = response.keys();
                     while(keys.hasNext()) {
                         String key = keys.next();
                         Log.d("CCG", "key " + key);
-//                        ownageList.add(key);//card name
+
+                        cardName = key;
                         try {
                             JSONArray owners = (JSONArray)response.get(key);
                             for (int i = 0; i < owners.length(); i++) {
@@ -78,8 +80,9 @@ public class OcrDetectorProcessor implements Detector.Processor<TextBlock> {
                         }
                     }
 
-
-                    ownersListener.updateOwners(ownageList);
+                    if (!"N/A".equals(cardName)) {
+                        ownersListener.updateOwners(new CardOwners(cardName, ownageList));
+                    }
 //                    TextGraphic textGraphic = new TextGraphic(mGraphicOverlay, ownageList);
 //                    mGraphicOverlay.add(textGraphic);
                 }

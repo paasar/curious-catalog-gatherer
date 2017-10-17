@@ -30,7 +30,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
@@ -47,12 +46,12 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.vision.text.TextRecognizer;
 
 import java.io.IOException;
-import java.util.List;
 
-import fi.raah.android.curious_catalog_gatherer.model.Ownage;
+import fi.raah.android.curious_catalog_gatherer.model.CardOwners;
 import fi.raah.android.curious_catalog_gatherer.ui.camera.CameraSource;
 import fi.raah.android.curious_catalog_gatherer.ui.camera.CameraSourcePreview;
 import fi.raah.android.curious_catalog_gatherer.ui.camera.GraphicOverlay;
+import fi.raah.android.curious_catalog_gatherer.ui.OwnersOverlayFragment;
 
 /**
  * Activity for the Ocr Detecting app.  This app detects text and displays the value with the
@@ -81,7 +80,7 @@ public final class MainActivity extends AppCompatActivity implements OwnersListe
     private GestureDetector gestureDetector;
 
     //TODO Dagger
-    private OwnersOverlayFragment ownersOverlayFragment = new OwnersOverlayFragment();
+    private OwnersOverlayFragment ownersOverlayFragment;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -97,19 +96,29 @@ public final class MainActivity extends AppCompatActivity implements OwnersListe
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //TODO hide when clicked again
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_owners_overlay) {
-            //TODO add only once?
-
-            FragmentManager fm = getSupportFragmentManager();
-            FragmentTransaction ft = fm.beginTransaction();
-            ft.replace(R.id.fragment_container, ownersOverlayFragment);
-            ft.commit();
-            //TODO addToBackStack()
+            toggleOwnerOverlayFragment();
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    protected void toggleOwnerOverlayFragment() {
+        FragmentManager fm = getSupportFragmentManager();
+        FragmentTransaction ft = fm.beginTransaction();
+
+        if (ownersOverlayFragment.isAdded()) {
+            if (ownersOverlayFragment.isVisible()) {
+                ft.hide(ownersOverlayFragment);
+            } else {
+                ft.show(ownersOverlayFragment);
+            }
+        } else {
+            ft.add(R.id.fragment_container, ownersOverlayFragment);
+        }
+
+        ft.commit();
     }
 
     /**
@@ -137,6 +146,8 @@ public final class MainActivity extends AppCompatActivity implements OwnersListe
         }
 
         gestureDetector = new GestureDetector(this, new CaptureGestureListener());
+
+        ownersOverlayFragment = new OwnersOverlayFragment();
 
         Snackbar.make(mGraphicOverlay, "Tap to refocus.",
                 Snackbar.LENGTH_LONG)
@@ -347,16 +358,12 @@ public final class MainActivity extends AppCompatActivity implements OwnersListe
     }
 
     @Override
-    public void updateOwners(final List<Ownage> ownageList) {
+    public void updateOwners(final CardOwners cardOwners) {
         runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (!ownageList.isEmpty()) {
-                    Log.d("CCG", ownageList.toString());
-                    ownersOverlayFragment.updateOwnageList(ownageList);
-                } else {
-                    Log.d("CCG", "Empty ownage list!");
-                }
+                @Override
+                public void run() {
+                Log.d("CCG", cardOwners.toString());
+                ownersOverlayFragment.updateOwnageList(cardOwners);
             }
         });
     }

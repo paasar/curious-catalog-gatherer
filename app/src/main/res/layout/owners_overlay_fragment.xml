@@ -5,20 +5,39 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/transparent_black"
+    android:background="@color/transparent_black_light"
     android:layout_margin="10dp">
+
+    <TextView
+        android:id="@+id/card_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/transparent_black_light"
+        android:layout_margin="3dp"
+        android:paddingStart="3dp"
+        android:paddingEnd="3dp"
+        android:textSize="20sp"
+        android:text="No card scanned"/>
 
     <ListView android:id="@android:id/list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/green"
+        android:background="@color/transparent_black_light"
         android:layout_weight="1"
+        android:layout_marginLeft="3dp"
+        android:layout_marginRight="3dp"
+        android:paddingStart="1dp"
+        android:paddingEnd="1dp"
+        android:textSize="16sp"
         android:drawSelectorOnTop="false"/>
 
     <TextView android:id="@android:id/empty"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/red"
-        android:text="No data"/>
+        android:background="@color/transparent_black_light"
+        android:layout_marginLeft="3dp"
+        android:layout_marginRight="3dp"
+        android:textSize="16sp"
+        android:text="No owners found."/>
 
 </LinearLayout>
