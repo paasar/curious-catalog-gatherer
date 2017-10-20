@@ -97,7 +97,7 @@ public final class MainActivity extends AppCompatActivity implements OwnersListe
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_owners_overlay) {
+        if (id == R.id.action_card_overlay) {
             toggleOwnerOverlayFragment();
         }
 
@@ -312,7 +312,7 @@ public final class MainActivity extends AppCompatActivity implements OwnersListe
         };
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Multitracker sample")
+        builder.setTitle("CCG Camera Permission")
                 .setMessage(R.string.no_camera_permission)
                 .setPositiveButton(R.string.ok, listener)
                 .show();

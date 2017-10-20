@@ -2,14 +2,21 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/action_owners_history"
+        android:id="@+id/action_card_overlay"
         android:orderInCategory="100"
-        android:title="Owners history"
-        app:showAsAction="never" />
+        android:title="Card data history"
+        android:icon="@drawable/ic_remove_red_eye_white_24dp"
+        app:showAsAction="always" />
     <item
-        android:id="@+id/action_owners_overlay"
+        android:id="@+id/action_card_history"
         android:orderInCategory="200"
-        android:title="Owners overlay"
-        android:icon="@drawable/icon"
-        app:showAsAction="ifRoom" />
+        android:title="Card data overlay"
+        android:icon="@drawable/ic_history_white_24dp"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/action_manage_cards"
+        android:orderInCategory="200"
+        android:title="Card data overlay"
+        android:icon="@drawable/ic_people_white_24dp"
+        app:showAsAction="always" />
 </menu>
