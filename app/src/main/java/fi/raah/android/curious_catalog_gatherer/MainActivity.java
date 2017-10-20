@@ -208,7 +208,7 @@ public final class MainActivity extends AppCompatActivity implements OwnersListe
         // Create the TextRecognizer
         TextRecognizer textRecognizer = new TextRecognizer.Builder(context).build();
         // Set the TextRecognizer's Processor.
-        textRecognizer.setProcessor(new OcrDetectorProcessor(mGraphicOverlay, this));
+        textRecognizer.setProcessor(new OcrDetectorProcessor(getAssets(), mGraphicOverlay, this));
         // Check if the TextRecognizer is operational.
         if (!textRecognizer.isOperational()) {
             Log.w(TAG, "Detector dependencies are not yet available.");

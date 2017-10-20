@@ -15,27 +15,17 @@
  */
 package fi.raah.android.curious_catalog_gatherer;
 
+import android.content.res.AssetManager;
 import android.util.Log;
 import android.util.SparseArray;
 
-import fi.raah.android.curious_catalog_gatherer.http.AsyncJsonHttpResponseHandler;
-import fi.raah.android.curious_catalog_gatherer.http.CatalogClient;
-import fi.raah.android.curious_catalog_gatherer.model.CardOwners;
-import fi.raah.android.curious_catalog_gatherer.model.Ownage;
-import fi.raah.android.curious_catalog_gatherer.ui.camera.GraphicOverlay;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.text.TextBlock;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-
-import org.json.*;
-
-import cz.msebera.android.httpclient.Header;
+import fi.raah.android.curious_catalog_gatherer.cards.CardService;
+import fi.raah.android.curious_catalog_gatherer.ui.camera.GraphicOverlay;
 
 /**
  * A very simple Processor which gets detected TextBlocks and adds them to the overlay
@@ -46,61 +36,19 @@ public class OcrDetectorProcessor implements Detector.Processor<TextBlock> {
     private final OwnersListener ownersListener;
     private GraphicOverlay<GraphicOverlay.Graphic> mGraphicOverlay;
 
-    OcrDetectorProcessor(GraphicOverlay<GraphicOverlay.Graphic> ocrGraphicOverlay, OwnersListener ownersListener) {
+    //TODO Dagger?
+    private DetectionFilter detectionFilter;
+    private CardService cardService;
+
+    OcrDetectorProcessor(AssetManager assetManager,
+                         GraphicOverlay<GraphicOverlay.Graphic> ocrGraphicOverlay,
+                         OwnersListener ownersListener) {
         mGraphicOverlay = ocrGraphicOverlay;
         this.ownersListener = ownersListener;
+        this.cardService = new CardService(assetManager);
+        this.detectionFilter = new DetectionFilter(cardService);
     }
 
-    private void getOwnerData(String item) throws JSONException {
-        try {
-            CatalogClient.get("/ext/api/card-owners?cardName=" + URLEncoder.encode(item, "UTF-8"), null, new AsyncJsonHttpResponseHandler() {
-                @Override
-                public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                    // If the response is JSONObject instead of expected JSONArray
-                    Log.d("CCG", "It was an object! " + response);
-
-                    //TODO No owners found.
-                    String cardName = "N/A";
-                    List<Ownage> ownageList = new ArrayList<>();
-
-                    Iterator<String> keys = response.keys();
-                    while(keys.hasNext()) {
-                        String key = keys.next();
-                        Log.d("CCG", "key " + key);
-
-                        cardName = key;
-                        try {
-                            JSONArray owners = (JSONArray)response.get(key);
-                            for (int i = 0; i < owners.length(); i++) {
-                                JSONObject owner = (JSONObject)owners.get(i);
-                                ownageList.add(new Ownage(owner.getString("username"), owner.getInt("ownedCount"), owner.getString("blockName")));
-                            }
-                        } catch (JSONException e) {
-                            Log.e("CCG", "ERROR: " + e.getMessage());
-                        }
-                    }
-
-                    if (!"N/A".equals(cardName)) {
-                        ownersListener.updateOwners(new CardOwners(cardName, ownageList));
-                    }
-//                    TextGraphic textGraphic = new TextGraphic(mGraphicOverlay, ownageList);
-//                    mGraphicOverlay.add(textGraphic);
-                }
-
-                @Override
-                public void onSuccess(int statusCode, Header[] headers, JSONArray cards) {
-                    try {
-                        JSONObject first = (JSONObject) cards.get(0);
-                        Log.d("CCG", "FIRST " + first);
-                    } catch (JSONException e) {
-                        Log.d("CCG", e.getMessage());
-                    }
-                }
-            });
-        } catch (UnsupportedEncodingException e) {
-            Log.e("CCG", "ERROR " + e.getMessage());
-        }
-    }
     @Override
     public void receiveDetections(Detector.Detections<TextBlock> detections) {
         mGraphicOverlay.clear();
@@ -115,31 +63,24 @@ public class OcrDetectorProcessor implements Detector.Processor<TextBlock> {
         if (items.size() < 1) {
             return;
         }
-        TextBlock item = items.valueAt(0);
-        // TODO Get blocks with single line
-        // TODO Get first single line block -> name?
-        // TODO Get second single line block -> type?
-        if (item != null && item.getValue() != null && item.getValue().length() > 2) {
-            Log.d("Processor", "Text detected! " + item.getValue());
-            try {
-                getOwnerData(item.getValue());
-            } catch (JSONException e) {
-                Log.e("CCG", "ERROR: " + e.getMessage());
-            }
+
+        List<TextBlock> singleLineBlocks = detectionFilter.filterSingleLineBlocks(items);
+
+        DetectionFilter.CardAndNonCard cardAndNonCard = detectionFilter.splitIntoCardsAndNonCards(singleLineBlocks);
+
+        for (TextBlock block : cardAndNonCard.getNonCardBlocks()) {
+            addGraphic(block, OcrGraphic.RED_COLOR);
         }
-        OcrGraphic graphic = new OcrGraphic(mGraphicOverlay, item);
-        mGraphicOverlay.add(graphic);
+
+        for (TextBlock block : cardAndNonCard.getCardBlocks()) {
+            addGraphic(block, OcrGraphic.GREEN_COLOR);
+            cardService.fetchAndUpdateOwnerData(ownersListener, block.getValue());
+        }
     }
 
-    private void drawFoundTexts(SparseArray<TextBlock> items) {
-        for (int i = 0; i < items.size(); ++i) {
-            TextBlock item = items.valueAt(i);
-            if (item != null && item.getValue() != null) {
-                Log.d("Processor", "Text detected! " + item.getValue());
-            }
-            OcrGraphic graphic = new OcrGraphic(mGraphicOverlay, item);
-            mGraphicOverlay.add(graphic);
-        }
+    private void addGraphic(TextBlock block, int color) {
+        OcrGraphic graphic = new OcrGraphic(mGraphicOverlay, block, color);
+        mGraphicOverlay.add(graphic);
     }
 
     @Override
