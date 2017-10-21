@@ -17,6 +17,6 @@
         android:id="@+id/action_manage_cards"
         android:orderInCategory="200"
         android:title="Card data overlay"
-        android:icon="@drawable/ic_people_white_24dp"
+        android:icon="@drawable/ic_mode_edit_white_24dp"
         app:showAsAction="always" />
 </menu>
