@@ -46,12 +46,15 @@ import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.vision.text.TextRecognizer;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import fi.raah.android.curious_catalog_gatherer.model.CardOwners;
+import fi.raah.android.curious_catalog_gatherer.model.CardOwnersAdapter;
+import fi.raah.android.curious_catalog_gatherer.model.Ownage;
+import fi.raah.android.curious_catalog_gatherer.ui.OwnersOverlayFragment;
 import fi.raah.android.curious_catalog_gatherer.ui.camera.CameraSource;
 import fi.raah.android.curious_catalog_gatherer.ui.camera.CameraSourcePreview;
 import fi.raah.android.curious_catalog_gatherer.ui.camera.GraphicOverlay;
-import fi.raah.android.curious_catalog_gatherer.ui.OwnersOverlayFragment;
 
 /**
  * Activity for the Ocr Detecting app.  This app detects text and displays the value with the
@@ -81,6 +84,7 @@ public final class MainActivity extends AppCompatActivity implements OwnersListe
 
     //TODO Dagger
     private OwnersOverlayFragment ownersOverlayFragment;
+    private CardOwnersAdapter cardOwnersAdapter;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -148,6 +152,8 @@ public final class MainActivity extends AppCompatActivity implements OwnersListe
         gestureDetector = new GestureDetector(this, new CaptureGestureListener());
 
         ownersOverlayFragment = new OwnersOverlayFragment();
+        cardOwnersAdapter = new CardOwnersAdapter(this, new ArrayList<Ownage>());
+        ownersOverlayFragment.setListAdapter(cardOwnersAdapter);
 
         Snackbar.make(mGraphicOverlay, "Tap to refocus.",
                 Snackbar.LENGTH_LONG)
@@ -362,8 +368,9 @@ public final class MainActivity extends AppCompatActivity implements OwnersListe
         runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                Log.d("CCG", cardOwners.toString());
-                ownersOverlayFragment.updateOwnageList(cardOwners);
+                    Log.d("CCG", cardOwners.toString());
+                    cardOwnersAdapter.updateOwnageList(cardOwners);
+                    ownersOverlayFragment.setCardName(cardOwners.getCardName());
             }
         });
     }
