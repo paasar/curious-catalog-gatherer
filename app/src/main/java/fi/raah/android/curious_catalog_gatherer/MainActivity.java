@@ -30,6 +30,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
@@ -50,7 +51,10 @@ import java.util.ArrayList;
 
 import fi.raah.android.curious_catalog_gatherer.model.CardOwners;
 import fi.raah.android.curious_catalog_gatherer.model.CardOwnersAdapter;
+import fi.raah.android.curious_catalog_gatherer.model.CardOwnersHistoryQueue;
+import fi.raah.android.curious_catalog_gatherer.model.HistoryListAdapter;
 import fi.raah.android.curious_catalog_gatherer.model.Ownage;
+import fi.raah.android.curious_catalog_gatherer.ui.HistoryFragment;
 import fi.raah.android.curious_catalog_gatherer.ui.OwnersOverlayFragment;
 import fi.raah.android.curious_catalog_gatherer.ui.camera.CameraSource;
 import fi.raah.android.curious_catalog_gatherer.ui.camera.CameraSourcePreview;
@@ -86,6 +90,9 @@ public final class MainActivity extends AppCompatActivity implements OwnersListe
     private OwnersOverlayFragment ownersOverlayFragment;
     private CardOwnersAdapter cardOwnersAdapter;
 
+    private HistoryFragment historyFragment;
+    private HistoryListAdapter historyListAdapter;
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -102,27 +109,43 @@ public final class MainActivity extends AppCompatActivity implements OwnersListe
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_card_overlay) {
-            toggleOwnerOverlayFragment();
+            toggleFragment(ownersOverlayFragment);
+        }
+
+        if (id == R.id.action_card_history) {
+            toggleFragment(historyFragment);
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-    protected void toggleOwnerOverlayFragment() {
+    protected void toggleFragment(Fragment fragment) {
         FragmentManager fm = getSupportFragmentManager();
         FragmentTransaction ft = fm.beginTransaction();
 
-        if (ownersOverlayFragment.isAdded()) {
-            if (ownersOverlayFragment.isVisible()) {
-                ft.hide(ownersOverlayFragment);
+        if (fragment.isAdded()) {
+            if (fragment.isVisible()) {
+                ft.hide(fragment);
             } else {
-                ft.show(ownersOverlayFragment);
+                ft.show(fragment);
             }
         } else {
-            ft.add(R.id.fragment_container, ownersOverlayFragment);
+            ft.add(R.id.fragment_container, fragment);
+            ft.show(fragment);
         }
 
+        hideOtherFragments(ft, fragment);
+
         ft.commit();
+    }
+
+    private void hideOtherFragments(FragmentTransaction ft, Fragment fragment) {
+        if (fragment != ownersOverlayFragment) {
+            ft.hide(ownersOverlayFragment);
+        }
+        if (fragment != historyFragment) {
+            ft.hide(historyFragment);
+        }
     }
 
     /**
@@ -154,6 +177,10 @@ public final class MainActivity extends AppCompatActivity implements OwnersListe
         ownersOverlayFragment = new OwnersOverlayFragment();
         cardOwnersAdapter = new CardOwnersAdapter(this, new ArrayList<Ownage>());
         ownersOverlayFragment.setListAdapter(cardOwnersAdapter);
+
+        historyFragment = new HistoryFragment();
+        historyListAdapter = new HistoryListAdapter(this, new CardOwnersHistoryQueue(50));
+        historyFragment.setAdapter(historyListAdapter);
 
         Snackbar.make(mGraphicOverlay, "Tap to refocus.",
                 Snackbar.LENGTH_LONG)
@@ -371,6 +398,8 @@ public final class MainActivity extends AppCompatActivity implements OwnersListe
                     Log.d("CCG", cardOwners.toString());
                     cardOwnersAdapter.updateOwnageList(cardOwners);
                     ownersOverlayFragment.setCardName(cardOwners.getCardName());
+
+                    historyListAdapter.push(cardOwners);
             }
         });
     }

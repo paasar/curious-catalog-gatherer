@@ -5,4 +5,5 @@
     <color name="transparent_green">#9900ff00</color>
     <color name="transparent_red">#99ff0000</color>
     <color name="transparent_black_light">#66000000</color>
+    <color name="transparent_gray">#66999999</color>
 </resources>

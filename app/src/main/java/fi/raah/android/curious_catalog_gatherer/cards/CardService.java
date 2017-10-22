@@ -41,8 +41,6 @@ public class CardService {
     private void initializeBlockCards(AssetManager assetManager) {
         try {
             String[] assets = assetManager.list("cards");
-            Log.d("CCG", "Assets: " + assets[0]);
-
             for (String asset : assets) {
                 blockToCardsMap.put(asset, cardNames(assetManager, asset));
             }
