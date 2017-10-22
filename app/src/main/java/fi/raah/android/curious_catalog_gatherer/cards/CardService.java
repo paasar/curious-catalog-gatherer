@@ -58,10 +58,7 @@ public class CardService {
         String line = null;
         HashSet<String> cardNames = new HashSet<>();
         while((line = in.readLine()) != null) {
-            cardNames.add(line.toUpperCase());
-            //for (String cardName : cardNames) {
-            //    Log.d("CCG", "CARD NAME: " + cardName);
-            //}
+            cardNames.add(line);
         }
 
         //TODO mites nää hanskataan?
@@ -78,7 +75,7 @@ public class CardService {
     private boolean isInAllCards(String text) {
         Collection<Set<String>> cardNameSets = blockToCardsMap.values();
         for (Set<String> cardNames : cardNameSets) {
-            if (cardNames.contains(text.toUpperCase())) {
+            if (cardNames.contains(text)) {
                 return true;
             }
         }
