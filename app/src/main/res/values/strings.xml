@@ -2,6 +2,9 @@
 <resources>
     <string name="ok">OK</string>
     <string name="permission_camera_rationale">Access to the camera is needed for detection</string>
+    <string name="take_me_there">Take me there!</string>
+    <string name="settings_dialog_title">Configuration required</string>
+    <string name="settings_primer">You need to set catalog address and token to use this app.</string>
     <string name="no_camera_permission">This application cannot run because it does not have the camera permission. The application will now exit.</string>
     <string name="low_storage_error">OCR dependencies cannot be downloaded due to low device storage</string>
     <string name="title_activity_main">OCR Detector Sample</string>

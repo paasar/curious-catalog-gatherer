@@ -15,8 +15,14 @@
         app:showAsAction="always" />
     <item
         android:id="@+id/action_manage_cards"
-        android:orderInCategory="200"
-        android:title="Card data overlay"
+        android:orderInCategory="300"
+        android:title="Manage cards overlay"
         android:icon="@drawable/ic_mode_edit_white_24dp"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/action_manage_settings"
+        android:orderInCategory="400"
+        android:title="Settings overlay"
+        android:icon="@drawable/ic_settings_white_24dp"
         app:showAsAction="always" />
 </menu>

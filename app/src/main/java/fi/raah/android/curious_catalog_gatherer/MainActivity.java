@@ -56,6 +56,7 @@ import fi.raah.android.curious_catalog_gatherer.model.HistoryListAdapter;
 import fi.raah.android.curious_catalog_gatherer.model.Ownage;
 import fi.raah.android.curious_catalog_gatherer.ui.HistoryFragment;
 import fi.raah.android.curious_catalog_gatherer.ui.OwnersOverlayFragment;
+import fi.raah.android.curious_catalog_gatherer.ui.SettingsFragment;
 import fi.raah.android.curious_catalog_gatherer.ui.camera.CameraSource;
 import fi.raah.android.curious_catalog_gatherer.ui.camera.CameraSourcePreview;
 import fi.raah.android.curious_catalog_gatherer.ui.camera.GraphicOverlay;
@@ -65,7 +66,7 @@ import fi.raah.android.curious_catalog_gatherer.ui.camera.GraphicOverlay;
  * rear facing camera. During detection overlay graphics are drawn to indicate the position,
  * size, and contents of each TextBlock.
  */
-public final class MainActivity extends AppCompatActivity implements OwnersListener {
+public final class MainActivity extends AppCompatActivity implements ActivityCallback {
     private static final String TAG = "MainActivity";
 
     // Intent request code to handle updating play services if needed.
@@ -93,6 +94,10 @@ public final class MainActivity extends AppCompatActivity implements OwnersListe
     private HistoryFragment historyFragment;
     private HistoryListAdapter historyListAdapter;
 
+    private SettingsFragment settingsFragment;
+
+    private Settings settings;
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -114,6 +119,10 @@ public final class MainActivity extends AppCompatActivity implements OwnersListe
 
         if (id == R.id.action_card_history) {
             toggleFragment(historyFragment);
+        }
+
+        if (id == R.id.action_manage_settings) {
+            toggleFragment(settingsFragment);
         }
 
         return super.onOptionsItemSelected(item);
@@ -146,6 +155,9 @@ public final class MainActivity extends AppCompatActivity implements OwnersListe
         if (fragment != historyFragment) {
             ft.hide(historyFragment);
         }
+        if (fragment != settingsFragment) {
+            ft.hide(settingsFragment);
+        }
     }
 
     /**
@@ -163,14 +175,16 @@ public final class MainActivity extends AppCompatActivity implements OwnersListe
         boolean autoFocus = true;
         boolean useFlash = false;
 
+        settings = new Settings(getPreferences(Context.MODE_PRIVATE));
         // Check for the camera permission before accessing the camera.  If the
         // permission is not granted yet, request permission.
         int rc = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
         if (rc == PackageManager.PERMISSION_GRANTED) {
-            createCameraSource(autoFocus, useFlash);
+            createCameraSource(autoFocus, useFlash, settings);
         } else {
             requestCameraPermission();
         }
+
 
         gestureDetector = new GestureDetector(this, new CaptureGestureListener());
 
@@ -182,9 +196,19 @@ public final class MainActivity extends AppCompatActivity implements OwnersListe
         historyListAdapter = new HistoryListAdapter(this, new CardOwnersHistoryQueue(50));
         historyFragment.setAdapter(historyListAdapter);
 
+        settingsFragment = new SettingsFragment();
+
+        ensureSettings();
+
         Snackbar.make(mGraphicOverlay, "Tap to refocus.",
                 Snackbar.LENGTH_LONG)
                 .show();
+    }
+
+    private void ensureSettings() {
+        if (!settings.isSettingsOk()) {
+            requestConfiguration();
+        }
     }
 
     /**
@@ -219,6 +243,22 @@ public final class MainActivity extends AppCompatActivity implements OwnersListe
                 .show();
     }
 
+    private void requestConfiguration() {
+        DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                toggleFragment(settingsFragment);
+            }
+        };
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.settings_primer)
+               .setTitle(R.string.settings_dialog_title)
+               .setPositiveButton(R.string.take_me_there, listener)
+               .create()
+               .show();
+    }
+
     @Override
     public boolean onTouchEvent(MotionEvent e) {
         boolean c = gestureDetector.onTouchEvent(e);
@@ -235,13 +275,13 @@ public final class MainActivity extends AppCompatActivity implements OwnersListe
      * the constant.
      */
     @SuppressLint("InlinedApi")
-    private void createCameraSource(boolean autoFocus, boolean useFlash) {
+    private void createCameraSource(boolean autoFocus, boolean useFlash, Settings settings) {
         Context context = getApplicationContext();
 
         // Create the TextRecognizer
         TextRecognizer textRecognizer = new TextRecognizer.Builder(context).build();
         // Set the TextRecognizer's Processor.
-        textRecognizer.setProcessor(new OcrDetectorProcessor(getAssets(), mGraphicOverlay, this));
+        textRecognizer.setProcessor(new OcrDetectorProcessor(getAssets(), mGraphicOverlay, this, settings));
         // Check if the TextRecognizer is operational.
         if (!textRecognizer.isOperational()) {
             Log.w(TAG, "Detector dependencies are not yet available.");
@@ -331,7 +371,7 @@ public final class MainActivity extends AppCompatActivity implements OwnersListe
             // We have permission, so create the camerasource
             boolean autoFocus = getIntent().getBooleanExtra(AutoFocus,false);
             boolean useFlash = getIntent().getBooleanExtra(UseFlash, false);
-            createCameraSource(autoFocus, useFlash);
+            createCameraSource(autoFocus, useFlash, settings);
             return;
         }
 
@@ -395,11 +435,21 @@ public final class MainActivity extends AppCompatActivity implements OwnersListe
         runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Log.d("CCG", cardOwners.toString());
                     cardOwnersAdapter.updateOwnageList(cardOwners);
                     ownersOverlayFragment.setCardName(cardOwners.getCardName());
 
                     historyListAdapter.push(cardOwners);
+            }
+        });
+    }
+
+    @Override
+    public void makeToast(final String message) {
+        final Activity activity = this;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(activity, message, Toast.LENGTH_SHORT).show();
             }
         });
     }

@@ -33,7 +33,8 @@ import fi.raah.android.curious_catalog_gatherer.ui.camera.GraphicOverlay;
  */
 public class OcrDetectorProcessor implements Detector.Processor<TextBlock> {
 
-    private final OwnersListener ownersListener;
+    private final ActivityCallback activityCallback;
+    private final Settings settings;
     private GraphicOverlay<GraphicOverlay.Graphic> mGraphicOverlay;
 
     //TODO Dagger?
@@ -42,9 +43,11 @@ public class OcrDetectorProcessor implements Detector.Processor<TextBlock> {
 
     OcrDetectorProcessor(AssetManager assetManager,
                          GraphicOverlay<GraphicOverlay.Graphic> ocrGraphicOverlay,
-                         OwnersListener ownersListener) {
+                         ActivityCallback activityCallback,
+                         Settings settings) {
         mGraphicOverlay = ocrGraphicOverlay;
-        this.ownersListener = ownersListener;
+        this.activityCallback = activityCallback;
+        this.settings = settings;
         this.cardService = new CardService(assetManager);
         this.detectionFilter = new DetectionFilter(cardService);
     }
@@ -55,11 +58,11 @@ public class OcrDetectorProcessor implements Detector.Processor<TextBlock> {
         SparseArray<TextBlock> items = detections.getDetectedItems();
         Log.d("Processor", "Detections: " + items.size());
 
-        drawSingleTextWithRelatedData(items);
+        processDetectedTextBlocks(items);
         Log.d("Processor", "----------------------------------------------");
     }
 
-    private void drawSingleTextWithRelatedData(SparseArray<TextBlock> items) {
+    private void processDetectedTextBlocks(SparseArray<TextBlock> items) {
         if (items.size() < 1) {
             return;
         }
@@ -74,7 +77,13 @@ public class OcrDetectorProcessor implements Detector.Processor<TextBlock> {
 
         for (TextBlock block : cardAndNonCard.getCardBlocks()) {
             addGraphic(block, OcrGraphic.GREEN_COLOR);
-            cardService.fetchAndUpdateOwnerData(ownersListener, block.getValue());
+            if (settings.isSettingsOk()) {
+                cardService.fetchAndUpdateOwnerData(activityCallback, block.getValue());
+            }
+        }
+
+        if (!settings.isSettingsOk()) {
+            activityCallback.makeToast("Settings need to be set for full functionality.");
         }
     }
 

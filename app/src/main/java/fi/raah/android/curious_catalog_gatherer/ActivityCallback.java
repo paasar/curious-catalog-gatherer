@@ -1,10 +1,8 @@
 package fi.raah.android.curious_catalog_gatherer;
 
-import java.util.List;
-
 import fi.raah.android.curious_catalog_gatherer.model.CardOwners;
-import fi.raah.android.curious_catalog_gatherer.model.Ownage;
 
-public interface OwnersListener {
+public interface ActivityCallback {
     void updateOwners(CardOwners ownageList);
+    void makeToast(String message);
 }

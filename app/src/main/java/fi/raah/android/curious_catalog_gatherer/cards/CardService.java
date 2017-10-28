@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import cz.msebera.android.httpclient.Header;
-import fi.raah.android.curious_catalog_gatherer.OwnersListener;
+import fi.raah.android.curious_catalog_gatherer.ActivityCallback;
 import fi.raah.android.curious_catalog_gatherer.http.AsyncJsonHttpResponseHandler;
 import fi.raah.android.curious_catalog_gatherer.http.CatalogClient;
 import fi.raah.android.curious_catalog_gatherer.model.CardOwners;
@@ -81,15 +81,15 @@ public class CardService {
     }
 
 
-    public void fetchAndUpdateOwnerData(final OwnersListener ownersListener, final String cardName) {
+    public void fetchAndUpdateOwnerData(final ActivityCallback activityCallback, final String cardName) {
         if (CARD_NAME_TO_OWNAGE_CACHE.containsKey(cardName)) {
-            ownersListener.updateOwners(CARD_NAME_TO_OWNAGE_CACHE.get(cardName));
+            activityCallback.updateOwners(CARD_NAME_TO_OWNAGE_CACHE.get(cardName));
         } else {
-            fetchFromCatalog(ownersListener, cardName);
+            fetchFromCatalog(activityCallback, cardName);
         }
     }
 
-    private void fetchFromCatalog(final OwnersListener ownersListener, final String cardName) {
+    private void fetchFromCatalog(final ActivityCallback activityCallback, final String cardName) {
         try {
             CatalogClient.get("/ext/api/card-owners?cardName=" + URLEncoder.encode(cardName, "UTF-8"), null, new AsyncJsonHttpResponseHandler() {
                 @Override
@@ -119,7 +119,7 @@ public class CardService {
 
                     CardOwners cardOwners = new CardOwners(cardNameResult, ownageList);
                     CARD_NAME_TO_OWNAGE_CACHE.put(cardName, cardOwners);
-                    ownersListener.updateOwners(cardOwners);
+                    activityCallback.updateOwners(cardOwners);
                 }
 
                 @Override
