@@ -25,6 +25,7 @@ import com.google.android.gms.vision.text.TextBlock;
 import java.util.List;
 
 import fi.raah.android.curious_catalog_gatherer.cards.CardService;
+import fi.raah.android.curious_catalog_gatherer.http.CatalogClient;
 import fi.raah.android.curious_catalog_gatherer.ui.camera.GraphicOverlay;
 
 /**
@@ -48,7 +49,7 @@ public class OcrDetectorProcessor implements Detector.Processor<TextBlock> {
         mGraphicOverlay = ocrGraphicOverlay;
         this.activityCallback = activityCallback;
         this.settings = settings;
-        this.cardService = new CardService(assetManager);
+        this.cardService = new CardService(assetManager, new CatalogClient(settings));
         this.detectionFilter = new DetectionFilter(cardService);
     }
 

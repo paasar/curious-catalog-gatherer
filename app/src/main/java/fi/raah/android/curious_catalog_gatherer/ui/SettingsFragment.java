@@ -6,9 +6,6 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TextInputEditText;
 import android.support.v4.app.Fragment;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,12 +13,13 @@ import android.widget.Button;
 
 import fi.raah.android.curious_catalog_gatherer.R;
 
+import static fi.raah.android.curious_catalog_gatherer.Settings.CATALOG_DOMAIN_NAME;
+import static fi.raah.android.curious_catalog_gatherer.Settings.CATALOG_TOKEN;
+
 
 public class SettingsFragment extends Fragment {
 
-    public static final String CATALOG_DOMAIN_NAME = "catalogDomainName";
-    public static final String CATALOG_TOKEN = "catalogToken";
-
+    // TODO Settings
     private SharedPreferences preferences;
 
     @Nullable
@@ -40,6 +38,7 @@ public class SettingsFragment extends Fragment {
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //TODO check validity
                 String domainName = domainNameInput.getText().toString();
                 String token = tokenInput.getText().toString();
                 saveSettings(domainName, token);
