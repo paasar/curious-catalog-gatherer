@@ -55,6 +55,7 @@ import fi.raah.android.curious_catalog_gatherer.model.CardOwnersHistoryQueue;
 import fi.raah.android.curious_catalog_gatherer.model.HistoryListAdapter;
 import fi.raah.android.curious_catalog_gatherer.model.Ownage;
 import fi.raah.android.curious_catalog_gatherer.ui.HistoryFragment;
+import fi.raah.android.curious_catalog_gatherer.ui.Icons;
 import fi.raah.android.curious_catalog_gatherer.ui.OwnersOverlayFragment;
 import fi.raah.android.curious_catalog_gatherer.ui.SettingsFragment;
 import fi.raah.android.curious_catalog_gatherer.ui.camera.CameraSource;
@@ -98,10 +99,20 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
 
     private Settings settings;
 
+    private MenuItem cardInfoItem;
+    private MenuItem historyItem;
+    private MenuItem manageCardsItem;
+    private MenuItem settingsItem;
+    private Icons icons = new Icons();
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        cardInfoItem = menu.findItem(R.id.action_card_overlay);
+        historyItem = menu.findItem(R.id.action_card_history);
+        manageCardsItem = menu.findItem(R.id.action_manage_cards);
+        settingsItem = menu.findItem(R.id.action_manage_settings);
         return true;
     }
 
@@ -114,33 +125,36 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_card_overlay) {
-            toggleFragment(ownersOverlayFragment);
+            toggleFragment(ownersOverlayFragment, item);
         }
 
         if (id == R.id.action_card_history) {
-            toggleFragment(historyFragment);
+            toggleFragment(historyFragment, item);
         }
 
         if (id == R.id.action_manage_settings) {
-            toggleFragment(settingsFragment);
+            toggleFragment(settingsFragment, item);
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-    protected void toggleFragment(Fragment fragment) {
+    protected void toggleFragment(Fragment fragment, MenuItem item) {
         FragmentManager fm = getSupportFragmentManager();
         FragmentTransaction ft = fm.beginTransaction();
 
         if (fragment.isAdded()) {
             if (fragment.isVisible()) {
                 ft.hide(fragment);
+                item.setIcon(icons.off(item.getItemId()));
             } else {
                 ft.show(fragment);
+                item.setIcon(icons.on(item.getItemId()));
             }
         } else {
             ft.add(R.id.fragment_container, fragment);
             ft.show(fragment);
+            item.setIcon(icons.on(item.getItemId()));
         }
 
         hideOtherFragments(ft, fragment);
@@ -151,12 +165,20 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
     private void hideOtherFragments(FragmentTransaction ft, Fragment fragment) {
         if (fragment != ownersOverlayFragment) {
             ft.hide(ownersOverlayFragment);
+            cardInfoItem.setIcon(icons.off(cardInfoItem.getItemId()));
         }
         if (fragment != historyFragment) {
             ft.hide(historyFragment);
+            historyItem.setIcon(icons.off(historyItem.getItemId()));
+
         }
+//        if (fragment != manageCardsFragment) {
+//            ft.hide(manageCardsFragment);
+//            manageCardsItem.setIcon(icons.off(manageCardsItem.getItemId()));
+//        }
         if (fragment != settingsFragment) {
             ft.hide(settingsFragment);
+            settingsItem.setIcon(icons.off(settingsItem.getItemId()));
         }
     }
 
@@ -247,7 +269,8 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
         DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                toggleFragment(settingsFragment);
+
+                toggleFragment(settingsFragment, settingsItem);
             }
         };
 

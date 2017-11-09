@@ -4,25 +4,25 @@
     <item
         android:id="@+id/action_card_overlay"
         android:orderInCategory="100"
-        android:title="Card data history"
+        android:title="Card data"
         android:icon="@drawable/ic_remove_red_eye_white_24dp"
         app:showAsAction="always" />
     <item
         android:id="@+id/action_card_history"
         android:orderInCategory="200"
-        android:title="Card data overlay"
+        android:title="Card history"
         android:icon="@drawable/ic_history_white_24dp"
         app:showAsAction="always" />
     <item
         android:id="@+id/action_manage_cards"
         android:orderInCategory="300"
-        android:title="Manage cards overlay"
+        android:title="Manage cards"
         android:icon="@drawable/ic_mode_edit_white_24dp"
         app:showAsAction="always" />
     <item
         android:id="@+id/action_manage_settings"
         android:orderInCategory="400"
-        android:title="Settings overlay"
+        android:title="Settings"
         android:icon="@drawable/ic_settings_white_24dp"
         app:showAsAction="always" />
 </menu>
