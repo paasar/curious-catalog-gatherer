@@ -8,19 +8,19 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import fi.raah.android.curious_catalog_gatherer.R;
-import fi.raah.android.curious_catalog_gatherer.model.CardOwnersAdapter;
+import fi.raah.android.curious_catalog_gatherer.model.CardInfoAdapter;
 
-public class OwnersOverlayFragment extends ListFragment {
+public class CardInfoFragment extends ListFragment {
 
     private TextView cardNameView;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle inState) {
-        View view = inflater.inflate(R.layout.owners_overlay_fragment, container, false);
+        View view = inflater.inflate(R.layout.card_info_fragment, container, false);
         cardNameView = (TextView)view.findViewById(R.id.card_name);
 
-        CardOwnersAdapter cardOwnersAdapter = (CardOwnersAdapter) getListAdapter();
-        cardNameView.setText(cardOwnersAdapter.getCardName());
+        CardInfoAdapter cardInfoAdapter = (CardInfoAdapter) getListAdapter();
+        cardNameView.setText(cardInfoAdapter.getCardName());
 
         return view;
     }

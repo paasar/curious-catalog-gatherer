@@ -2,7 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/action_card_overlay"
+        android:id="@+id/action_card_info"
         android:orderInCategory="100"
         android:title="Card data"
         android:icon="@drawable/ic_remove_red_eye_white_24dp"

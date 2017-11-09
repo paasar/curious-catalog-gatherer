@@ -50,13 +50,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import fi.raah.android.curious_catalog_gatherer.model.CardOwners;
-import fi.raah.android.curious_catalog_gatherer.model.CardOwnersAdapter;
+import fi.raah.android.curious_catalog_gatherer.model.CardInfoAdapter;
 import fi.raah.android.curious_catalog_gatherer.model.CardOwnersHistoryQueue;
 import fi.raah.android.curious_catalog_gatherer.model.HistoryListAdapter;
 import fi.raah.android.curious_catalog_gatherer.model.Ownage;
 import fi.raah.android.curious_catalog_gatherer.ui.HistoryFragment;
 import fi.raah.android.curious_catalog_gatherer.ui.Icons;
-import fi.raah.android.curious_catalog_gatherer.ui.OwnersOverlayFragment;
+import fi.raah.android.curious_catalog_gatherer.ui.CardInfoFragment;
 import fi.raah.android.curious_catalog_gatherer.ui.SettingsFragment;
 import fi.raah.android.curious_catalog_gatherer.ui.camera.CameraSource;
 import fi.raah.android.curious_catalog_gatherer.ui.camera.CameraSourcePreview;
@@ -89,8 +89,8 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
     private GestureDetector gestureDetector;
 
     //TODO Dagger
-    private OwnersOverlayFragment ownersOverlayFragment;
-    private CardOwnersAdapter cardOwnersAdapter;
+    private CardInfoFragment cardInfoFragment;
+    private CardInfoAdapter cardInfoAdapter;
 
     private HistoryFragment historyFragment;
     private HistoryListAdapter historyListAdapter;
@@ -109,7 +109,7 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
-        cardInfoItem = menu.findItem(R.id.action_card_overlay);
+        cardInfoItem = menu.findItem(R.id.action_card_info);
         historyItem = menu.findItem(R.id.action_card_history);
         manageCardsItem = menu.findItem(R.id.action_manage_cards);
         settingsItem = menu.findItem(R.id.action_manage_settings);
@@ -124,8 +124,8 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_card_overlay) {
-            toggleFragment(ownersOverlayFragment, item);
+        if (id == R.id.action_card_info) {
+            toggleFragment(cardInfoFragment, item);
         }
 
         if (id == R.id.action_card_history) {
@@ -163,8 +163,8 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
     }
 
     private void hideOtherFragments(FragmentTransaction ft, Fragment fragment) {
-        if (fragment != ownersOverlayFragment) {
-            ft.hide(ownersOverlayFragment);
+        if (fragment != cardInfoFragment) {
+            ft.hide(cardInfoFragment);
             cardInfoItem.setIcon(icons.off(cardInfoItem.getItemId()));
         }
         if (fragment != historyFragment) {
@@ -210,9 +210,9 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
 
         gestureDetector = new GestureDetector(this, new CaptureGestureListener());
 
-        ownersOverlayFragment = new OwnersOverlayFragment();
-        cardOwnersAdapter = new CardOwnersAdapter(this, new ArrayList<Ownage>());
-        ownersOverlayFragment.setListAdapter(cardOwnersAdapter);
+        cardInfoFragment = new CardInfoFragment();
+        cardInfoAdapter = new CardInfoAdapter(this, new ArrayList<Ownage>());
+        cardInfoFragment.setListAdapter(cardInfoAdapter);
 
         historyFragment = new HistoryFragment();
         historyListAdapter = new HistoryListAdapter(this, new CardOwnersHistoryQueue(50));
@@ -458,8 +458,8 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
         runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    cardOwnersAdapter.updateOwnageList(cardOwners);
-                    ownersOverlayFragment.setCardName(cardOwners.getCardName());
+                    cardInfoAdapter.updateOwnageList(cardOwners);
+                    cardInfoFragment.setCardName(cardOwners.getCardName());
 
                     historyListAdapter.push(cardOwners);
             }

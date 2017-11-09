@@ -6,11 +6,11 @@ import android.widget.ArrayAdapter;
 
 import java.util.List;
 
-public class CardOwnersAdapter extends ArrayAdapter<Ownage> {
+public class CardInfoAdapter extends ArrayAdapter<Ownage> {
     private List<Ownage> ownageList;
     private String cardName;
 
-    public CardOwnersAdapter(@NonNull Context context, @NonNull List<Ownage> ownages) {
+    public CardInfoAdapter(@NonNull Context context, @NonNull List<Ownage> ownages) {
         super(context, android.R.layout.simple_list_item_1, ownages);
         this.ownageList = ownages;
         cardName = "No card scanned";
