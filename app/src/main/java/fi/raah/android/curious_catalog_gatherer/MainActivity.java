@@ -49,14 +49,15 @@ import com.google.android.gms.vision.text.TextRecognizer;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import fi.raah.android.curious_catalog_gatherer.model.CardOwners;
+import fi.raah.android.curious_catalog_gatherer.http.CatalogClient;
 import fi.raah.android.curious_catalog_gatherer.model.CardInfoAdapter;
+import fi.raah.android.curious_catalog_gatherer.model.CardOwners;
 import fi.raah.android.curious_catalog_gatherer.model.CardOwnersHistoryQueue;
 import fi.raah.android.curious_catalog_gatherer.model.HistoryListAdapter;
 import fi.raah.android.curious_catalog_gatherer.model.Ownage;
+import fi.raah.android.curious_catalog_gatherer.ui.CardInfoFragment;
 import fi.raah.android.curious_catalog_gatherer.ui.HistoryFragment;
 import fi.raah.android.curious_catalog_gatherer.ui.Icons;
-import fi.raah.android.curious_catalog_gatherer.ui.CardInfoFragment;
 import fi.raah.android.curious_catalog_gatherer.ui.SettingsFragment;
 import fi.raah.android.curious_catalog_gatherer.ui.camera.CameraSource;
 import fi.raah.android.curious_catalog_gatherer.ui.camera.CameraSourcePreview;
@@ -98,6 +99,7 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
     private SettingsFragment settingsFragment;
 
     private Settings settings;
+    private CatalogClient catalogClient;
 
     private MenuItem cardInfoItem;
     private MenuItem historyItem;
@@ -198,11 +200,12 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
         boolean useFlash = false;
 
         settings = new Settings(getPreferences(Context.MODE_PRIVATE));
+        catalogClient = new CatalogClient(settings);
         // Check for the camera permission before accessing the camera.  If the
         // permission is not granted yet, request permission.
         int rc = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
         if (rc == PackageManager.PERMISSION_GRANTED) {
-            createCameraSource(autoFocus, useFlash, settings);
+            createCameraSource(autoFocus, useFlash, settings, catalogClient);
         } else {
             requestCameraPermission();
         }
@@ -219,6 +222,7 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
         historyFragment.setAdapter(historyListAdapter);
 
         settingsFragment = new SettingsFragment();
+        settingsFragment.setDependencies(settings, catalogClient);
 
         ensureSettings();
 
@@ -298,13 +302,13 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
      * the constant.
      */
     @SuppressLint("InlinedApi")
-    private void createCameraSource(boolean autoFocus, boolean useFlash, Settings settings) {
+    private void createCameraSource(boolean autoFocus, boolean useFlash, Settings settings, CatalogClient catalogClient) {
         Context context = getApplicationContext();
 
         // Create the TextRecognizer
         TextRecognizer textRecognizer = new TextRecognizer.Builder(context).build();
         // Set the TextRecognizer's Processor.
-        textRecognizer.setProcessor(new OcrDetectorProcessor(getAssets(), mGraphicOverlay, this, settings));
+        textRecognizer.setProcessor(new OcrDetectorProcessor(getAssets(), mGraphicOverlay, this, settings, catalogClient));
         // Check if the TextRecognizer is operational.
         if (!textRecognizer.isOperational()) {
             Log.w(TAG, "Detector dependencies are not yet available.");
@@ -394,7 +398,7 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
             // We have permission, so create the camerasource
             boolean autoFocus = getIntent().getBooleanExtra(AutoFocus,false);
             boolean useFlash = getIntent().getBooleanExtra(UseFlash, false);
-            createCameraSource(autoFocus, useFlash, settings);
+            createCameraSource(autoFocus, useFlash, settings, catalogClient);
             return;
         }
 

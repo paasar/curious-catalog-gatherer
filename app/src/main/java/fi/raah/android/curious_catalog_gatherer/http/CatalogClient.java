@@ -9,6 +9,7 @@ import com.loopj.android.http.RequestParams;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
+import cz.msebera.android.httpclient.HttpHeaders;
 import fi.raah.android.curious_catalog_gatherer.Settings;
 
 public class CatalogClient {
@@ -21,6 +22,7 @@ public class CatalogClient {
     }
 
     private void get(String uri, RequestParams params, AsyncHttpResponseHandler responseHandler) {
+        updateAccessToken(settings.getCatalogToken());
         client.get(getFullUrl(uri), params, responseHandler);
     }
 
@@ -34,9 +36,19 @@ public class CatalogClient {
 
     public void getCardOwners(String cardName, RequestParams params, AsyncJsonHttpResponseHandler asyncJsonHttpResponseHandler) {
         try {
-            get("/api/ext/cards?cardName=" + URLEncoder.encode(cardName, "UTF-8"), params, asyncJsonHttpResponseHandler);
+            get("/api/v2/ext/cards?cardName=" + URLEncoder.encode(cardName, "UTF-8"), params, asyncJsonHttpResponseHandler);
         } catch (UnsupportedEncodingException e) {
             Log.e("CCG", "ERROR " + e.getMessage());
         }
+    }
+
+    public void testToken(String domainName, String token, AsyncJsonHttpResponseHandler responseHandler) {
+        updateAccessToken(token);
+        client.get("https://" + domainName + "/api/v2/ext/hello", null, responseHandler);
+    }
+
+    private void updateAccessToken(String token) {
+        client.removeHeader(HttpHeaders.AUTHORIZATION);
+        client.addHeader(HttpHeaders.AUTHORIZATION, "Basic " + token);
     }
 }
