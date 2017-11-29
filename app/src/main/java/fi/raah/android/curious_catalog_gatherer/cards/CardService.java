@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -27,7 +26,14 @@ import fi.raah.android.curious_catalog_gatherer.model.CardOwners;
 import fi.raah.android.curious_catalog_gatherer.model.Ownage;
 
 public class CardService {
-    private HashMap<String, Set<String>> blockToCardsMap = new HashMap<>();
+    //0123__NNN__Blaa -> Set<Mountain,Swamp,...>
+    private Set<String> cardNames = new HashSet<>();
+
+    //NNN_Mountain -> 123456
+    private HashMap<String, String> setAndCardNameToMultiverseId = new HashMap<>();
+
+    //Mountain -> Set<NNN,MMM,...>
+    private HashMap<String, Set<String>> cardNameToSets = new HashMap<>();
 
     private final static ConcurrentHashMap<String, CardOwners> CARD_NAME_TO_OWNAGE_CACHE = new ConcurrentHashMap<>();
     private final CatalogClient catalogClient;
@@ -41,7 +47,12 @@ public class CardService {
         try {
             String[] assets = assetManager.list("cards");
             for (String asset : assets) {
-                blockToCardsMap.put(asset, cardNames(assetManager, asset));
+                Set<Card> cards = cards(assetManager, asset);
+                cardNames.addAll(cardsToNames(cards));
+
+                String setCode = parseSetCode(asset);
+                addToMultiverseIdMap(setCode, cards);
+                addToCardNameToSetsMap(setCode, cards);
             }
         } catch (IOException e) {
             //TODO
@@ -49,19 +60,61 @@ public class CardService {
         }
     }
 
-    private Set<String> cardNames(AssetManager assetManager, String fileName) throws IOException {
-        InputStream inputStream = assetManager.open("cards/" + fileName);
+    private void addToCardNameToSetsMap(String setCode, Set<Card> cards) {
+        for (Card card : cards) {
+            Set<String> setCodes = getSetNames(card.getName());
+            setCodes.add(setCode);
+            cardNameToSets.put(card.getName(), setCodes);
+        }
+    }
+
+    private Set<String> getSetNames(String cardName) {
+        if (cardNameToSets.containsKey(cardName)) {
+            return cardNameToSets.get(cardName);
+        } else {
+            return new HashSet<String>();
+        }
+    }
+
+    private void addToMultiverseIdMap(String setCode, Set<Card> cards) {
+        for (Card card : cards) {
+            setAndCardNameToMultiverseId.put(
+                    setCodeAndCardNameKey(setCode, card.getName()),
+                    card.getMultiverseId());
+        }
+    }
+
+    private String setCodeAndCardNameKey(String setCode, String cardName) {
+        return setCode + "_" + cardName;
+    }
+
+    private String parseSetCode(String setFileName) {
+        String[] fileNameParts = setFileName.split("__");
+        return fileNameParts[1];
+    }
+
+    private Set<Card> cards(AssetManager assetManager, String setFileName) throws IOException {
+        InputStream inputStream = assetManager.open("cards/" + setFileName);
         BufferedReader in = new BufferedReader(new InputStreamReader(inputStream));
-        String line = null;
-        HashSet<String> cardNames = new HashSet<>();
+        String line;
+        HashSet<Card> cards = new HashSet<>();
         while((line = in.readLine()) != null) {
-            cardNames.add(line);
+            String[] cardNameAndMultiverseId = line.split(";");
+            cards.add(new Card(cardNameAndMultiverseId[0], cardNameAndMultiverseId[1]));
         }
 
-        //TODO mites nää hanskataan?
+        //TODO What should we do here?
         in.close();
         inputStream.close();
 
+        return cards;
+    }
+
+    private Set<String> cardsToNames(Set<Card> cards) {
+        Set<String> cardNames = new HashSet<>();
+        for (Card card : cards) {
+            cardNames.add(card.getName());
+        }
         return cardNames;
     }
 
@@ -70,13 +123,7 @@ public class CardService {
     }
 
     private boolean isInAllCards(String text) {
-        Collection<Set<String>> cardNameSets = blockToCardsMap.values();
-        for (Set<String> cardNames : cardNameSets) {
-            if (cardNames.contains(text)) {
-                return true;
-            }
-        }
-        return false;
+        return cardNames.contains(text);
     }
 
     public void fetchAndUpdateOwnerData(final ActivityCallback activityCallback, final String cardName) {
@@ -85,6 +132,14 @@ public class CardService {
         } else {
             fetchFromCatalog(activityCallback, cardName);
         }
+    }
+
+    public Set<String> getSetNamesForCardName(String cardName) {
+        return cardNameToSets.get(cardName);
+    }
+
+    public String getMultiverseId(String setCode, String cardName) {
+        return setAndCardNameToMultiverseId.get(setCodeAndCardNameKey(setCode, cardName));
     }
 
     private void fetchFromCatalog(final ActivityCallback activityCallback, final String cardName) {
