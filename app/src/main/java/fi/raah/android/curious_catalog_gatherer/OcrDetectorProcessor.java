@@ -42,15 +42,14 @@ public class OcrDetectorProcessor implements Detector.Processor<TextBlock> {
     private DetectionFilter detectionFilter;
     private CardService cardService;
 
-    OcrDetectorProcessor(AssetManager assetManager,
-                         GraphicOverlay<GraphicOverlay.Graphic> ocrGraphicOverlay,
+    OcrDetectorProcessor(GraphicOverlay<GraphicOverlay.Graphic> ocrGraphicOverlay,
                          ActivityCallback activityCallback,
                          Settings settings,
-                         CatalogClient catalogClient) {
+                         CardService cardService) {
         mGraphicOverlay = ocrGraphicOverlay;
         this.activityCallback = activityCallback;
         this.settings = settings;
-        this.cardService = new CardService(assetManager, catalogClient);
+        this.cardService = cardService;
         this.detectionFilter = new DetectionFilter(cardService);
     }
 

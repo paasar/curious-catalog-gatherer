@@ -49,13 +49,17 @@ import com.google.android.gms.vision.text.TextRecognizer;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import fi.raah.android.curious_catalog_gatherer.cards.CardService;
 import fi.raah.android.curious_catalog_gatherer.http.CatalogClient;
 import fi.raah.android.curious_catalog_gatherer.model.CardInfoAdapter;
+import fi.raah.android.curious_catalog_gatherer.model.CardManagerAdapter;
 import fi.raah.android.curious_catalog_gatherer.model.CardOwners;
 import fi.raah.android.curious_catalog_gatherer.model.CardOwnersHistoryQueue;
+import fi.raah.android.curious_catalog_gatherer.model.EditableCard;
 import fi.raah.android.curious_catalog_gatherer.model.HistoryListAdapter;
 import fi.raah.android.curious_catalog_gatherer.model.Ownage;
 import fi.raah.android.curious_catalog_gatherer.ui.CardInfoFragment;
+import fi.raah.android.curious_catalog_gatherer.ui.CardManagerFragment;
 import fi.raah.android.curious_catalog_gatherer.ui.HistoryFragment;
 import fi.raah.android.curious_catalog_gatherer.ui.Icons;
 import fi.raah.android.curious_catalog_gatherer.ui.SettingsFragment;
@@ -100,6 +104,10 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
 
     private Settings settings;
     private CatalogClient catalogClient;
+    private CardService cardService;
+
+    private CardManagerFragment cardManagerFragment;
+    private CardManagerAdapter cardManagerAdapter;
 
     private MenuItem cardInfoItem;
     private MenuItem historyItem;
@@ -138,6 +146,10 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
             toggleFragment(settingsFragment, item);
         }
 
+        if (id == R.id.action_manage_cards) {
+            toggleFragment(cardManagerFragment, item);
+        }
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -172,12 +184,11 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
         if (fragment != historyFragment) {
             ft.hide(historyFragment);
             historyItem.setIcon(icons.off(historyItem.getItemId()));
-
         }
-//        if (fragment != manageCardsFragment) {
-//            ft.hide(manageCardsFragment);
-//            manageCardsItem.setIcon(icons.off(manageCardsItem.getItemId()));
-//        }
+        if (fragment != cardManagerFragment) {
+            ft.hide(cardManagerFragment);
+            manageCardsItem.setIcon(icons.off(manageCardsItem.getItemId()));
+        }
         if (fragment != settingsFragment) {
             ft.hide(settingsFragment);
             settingsItem.setIcon(icons.off(settingsItem.getItemId()));
@@ -200,7 +211,8 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
         boolean useFlash = false;
 
         settings = new Settings(getPreferences(Context.MODE_PRIVATE));
-        catalogClient = new CatalogClient(settings);
+        catalogClient = new CatalogClient(this, settings);
+        cardService = new CardService(getAssets(), settings, catalogClient);
         // Check for the camera permission before accessing the camera.  If the
         // permission is not granted yet, request permission.
         int rc = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
@@ -225,6 +237,11 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
         settingsFragment.setDependencies(settings, catalogClient);
 
         ensureSettings();
+
+        cardManagerFragment = new CardManagerFragment();
+        cardManagerAdapter = new CardManagerAdapter(this, new ArrayList<EditableCard>());
+        cardManagerFragment.setAdapter(cardManagerAdapter);
+        cardManagerFragment.setDependencies(this, cardService);
 
         Snackbar.make(mGraphicOverlay, "Tap to refocus.",
                 Snackbar.LENGTH_LONG)
@@ -308,7 +325,7 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
         // Create the TextRecognizer
         TextRecognizer textRecognizer = new TextRecognizer.Builder(context).build();
         // Set the TextRecognizer's Processor.
-        textRecognizer.setProcessor(new OcrDetectorProcessor(getAssets(), mGraphicOverlay, this, settings, catalogClient));
+        textRecognizer.setProcessor(new OcrDetectorProcessor(mGraphicOverlay, this, settings, cardService));
         // Check if the TextRecognizer is operational.
         if (!textRecognizer.isOperational()) {
             Log.w(TAG, "Detector dependencies are not yet available.");
@@ -458,7 +475,7 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
     }
 
     @Override
-    public void updateOwners(final CardOwners cardOwners) {
+    public void cardDataUpdate(final CardOwners cardOwners, final EditableCard editableCard, final boolean refresh) {
         runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -466,6 +483,11 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
                     cardInfoFragment.setCardName(cardOwners.getCardName());
 
                     historyListAdapter.push(cardOwners);
+
+                    if (refresh) {
+                        cardManagerAdapter.removeByName(editableCard.getName());
+                    }
+                    cardManagerAdapter.add(editableCard);
             }
         });
     }

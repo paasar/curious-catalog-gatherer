@@ -5,12 +5,14 @@ import android.support.annotation.NonNull;
 public class Ownage {
     private String owner;
     private int amount;
-    private String block;
+    private String blockName;
+    private String blockCode;
 
-    public Ownage(@NonNull String owner, int amount, @NonNull String block) {
+    public Ownage(@NonNull String owner, int amount, @NonNull String blockName, @NonNull String blockCode) {
         this.owner = owner;
         this.amount = amount;
-        this.block = block;
+        this.blockName = blockName;
+        this.blockCode = blockCode;
     }
 
     public String getOwner() {
@@ -21,13 +23,17 @@ public class Ownage {
         return amount;
     }
 
-    public String getBlock() {
-        return block;
+    public String getBlockName() {
+        return blockName;
+    }
+
+    public String getBlockCode() {
+        return blockCode;
     }
 
     @Override
     public String toString() {
-        return owner + " " + amount + " " + block;
+        return owner + " " + amount + " " + blockName;
     }
 
     @Override
@@ -38,16 +44,17 @@ public class Ownage {
         Ownage ownage = (Ownage) o;
 
         if (amount != ownage.amount) return false;
-        if (owner != null ? !owner.equals(ownage.owner) : ownage.owner != null) return false;
-        return block != null ? block.equals(ownage.block) : ownage.block == null;
-
+        if (!owner.equals(ownage.owner)) return false;
+        if (!blockName.equals(ownage.blockName)) return false;
+        return blockCode.equals(ownage.blockCode);
     }
 
     @Override
     public int hashCode() {
-        int result = owner != null ? owner.hashCode() : 0;
+        int result = owner.hashCode();
         result = 31 * result + amount;
-        result = 31 * result + (block != null ? block.hashCode() : 0);
+        result = 31 * result + blockName.hashCode();
+        result = 31 * result + blockCode.hashCode();
         return result;
     }
 }

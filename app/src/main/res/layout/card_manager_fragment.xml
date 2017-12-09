@@ -1,13 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:name="fi.raah.android.curious_catalog_gatherer.HistoryFragment"
+    android:name="fi.raah.android.curious_catalog_gatherer.CardManagerFragment"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/transparent_black_light"
     android:layout_margin="10dp">
 
-    <ExpandableListView android:id="@android:id/list"
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginBottom="10dp">
+
+        <Button
+            android:id="@+id/clear_cards_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:text="Clear"/>
+
+        <Button
+            android:id="@+id/update_cards_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:text="Save"/>
+    </RelativeLayout>
+
+    <ListView android:id="@android:id/list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:background="@color/transparent_black_light"
@@ -26,6 +47,6 @@
         android:layout_marginLeft="3dp"
         android:layout_marginRight="3dp"
         android:textSize="16sp"
-        android:text="No card info in history yet."/>
+        android:text="Edit list is empty."/>
 
 </LinearLayout>

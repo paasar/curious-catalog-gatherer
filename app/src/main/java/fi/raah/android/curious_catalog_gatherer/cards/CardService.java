@@ -20,9 +20,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import cz.msebera.android.httpclient.Header;
 import fi.raah.android.curious_catalog_gatherer.ActivityCallback;
+import fi.raah.android.curious_catalog_gatherer.Settings;
 import fi.raah.android.curious_catalog_gatherer.http.AsyncJsonHttpResponseHandler;
 import fi.raah.android.curious_catalog_gatherer.http.CatalogClient;
+import fi.raah.android.curious_catalog_gatherer.model.BlockCodeToAmount;
 import fi.raah.android.curious_catalog_gatherer.model.CardOwners;
+import fi.raah.android.curious_catalog_gatherer.model.EditableCard;
 import fi.raah.android.curious_catalog_gatherer.model.Ownage;
 
 public class CardService {
@@ -30,16 +33,19 @@ public class CardService {
     private Set<String> cardNames = new HashSet<>();
 
     //NNN_Mountain -> 123456
-    private HashMap<String, String> setAndCardNameToMultiverseId = new HashMap<>();
+    private HashMap<String, String> blockAndCardNameToMultiverseId = new HashMap<>();
 
     //Mountain -> Set<NNN,MMM,...>
-    private HashMap<String, Set<String>> cardNameToSets = new HashMap<>();
+    private HashMap<String, List<String>> cardNameToBlockCodes = new HashMap<>();
 
-    private final static ConcurrentHashMap<String, CardOwners> CARD_NAME_TO_OWNAGE_CACHE = new ConcurrentHashMap<>();
+    private final Settings settings;
     private final CatalogClient catalogClient;
 
-    public CardService(AssetManager assetManager, CatalogClient catalogClient) {
+    private final static ConcurrentHashMap<String, CardOwners> CARD_NAME_TO_OWNAGE_CACHE = new ConcurrentHashMap<>();
+
+    public CardService(AssetManager assetManager, Settings settings, CatalogClient catalogClient) {
         initializeBlockCards(assetManager);
+        this.settings = settings;
         this.catalogClient = catalogClient;
     }
 
@@ -50,9 +56,9 @@ public class CardService {
                 Set<Card> cards = cards(assetManager, asset);
                 cardNames.addAll(cardsToNames(cards));
 
-                String setCode = parseSetCode(asset);
-                addToMultiverseIdMap(setCode, cards);
-                addToCardNameToSetsMap(setCode, cards);
+                String blockCode = parseBlockCode(asset);
+                addToMultiverseIdMap(blockCode, cards);
+                addToCardNameToBlockCodesMap(blockCode, cards);
             }
         } catch (IOException e) {
             //TODO
@@ -60,35 +66,34 @@ public class CardService {
         }
     }
 
-    private void addToCardNameToSetsMap(String setCode, Set<Card> cards) {
+    private void addToCardNameToBlockCodesMap(String blockCode, Set<Card> cards) {
         for (Card card : cards) {
-            Set<String> setCodes = getSetNames(card.getName());
-            setCodes.add(setCode);
-            cardNameToSets.put(card.getName(), setCodes);
+            List<String> blockCodes = getBlockCodesForCardName(card.getName());
+            blockCodes.add(0, blockCode);//Add to front since we want to have newest first
+            cardNameToBlockCodes.put(card.getName(), blockCodes);
         }
     }
 
-    private Set<String> getSetNames(String cardName) {
-        if (cardNameToSets.containsKey(cardName)) {
-            return cardNameToSets.get(cardName);
+    private List<String> getBlockCodesForCardName(String cardName) {
+        if (cardNameToBlockCodes.containsKey(cardName)) {
+            return cardNameToBlockCodes.get(cardName);
         } else {
-            return new HashSet<String>();
+            return new ArrayList<String>();
         }
     }
 
-    private void addToMultiverseIdMap(String setCode, Set<Card> cards) {
+    private void addToMultiverseIdMap(String blockCode, Set<Card> cards) {
         for (Card card : cards) {
-            setAndCardNameToMultiverseId.put(
-                    setCodeAndCardNameKey(setCode, card.getName()),
-                    card.getMultiverseId());
+            blockAndCardNameToMultiverseId.put(
+                    blockCodeAndCardNameKey(blockCode, card.getName()), card.getMultiverseId());
         }
     }
 
-    private String setCodeAndCardNameKey(String setCode, String cardName) {
-        return setCode + "_" + cardName;
+    private String blockCodeAndCardNameKey(String blockCode, String cardName) {
+        return blockCode + "_" + cardName;
     }
 
-    private String parseSetCode(String setFileName) {
+    private String parseBlockCode(String setFileName) {
         String[] fileNameParts = setFileName.split("__");
         return fileNameParts[1];
     }
@@ -127,30 +132,34 @@ public class CardService {
     }
 
     public void fetchAndUpdateOwnerData(final ActivityCallback activityCallback, final String cardName) {
+        fetchAndUpdateOwnerData(activityCallback, cardName, false);
+    }
+
+    private void fetchAndUpdateOwnerData(final ActivityCallback activityCallback, final String cardName, boolean refresh) {
+        if (refresh) {
+            CARD_NAME_TO_OWNAGE_CACHE.remove(cardName);
+        }
+
         if (CARD_NAME_TO_OWNAGE_CACHE.containsKey(cardName)) {
-            activityCallback.updateOwners(CARD_NAME_TO_OWNAGE_CACHE.get(cardName));
+            CardOwners cardOwners = CARD_NAME_TO_OWNAGE_CACHE.get(cardName);
+            activityCallback.cardDataUpdate(cardOwners, createEditableCard(cardOwners), refresh);
         } else {
-            fetchFromCatalog(activityCallback, cardName);
+            fetchFromCatalog(activityCallback, cardName, refresh);
         }
     }
 
-    public Set<String> getSetNamesForCardName(String cardName) {
-        return cardNameToSets.get(cardName);
+    private String getMultiverseId(String blockCode, String cardName) {
+        String multiverseid = blockAndCardNameToMultiverseId.get(blockCodeAndCardNameKey(blockCode, cardName));
+        if (multiverseid != null) {
+            return multiverseid;
+        } else {
+            throw new IllegalStateException("Could not get multiverseid for blockCode " +
+                    blockCode + " and card name " + cardName);
+        }
     }
 
-    public String getMultiverseId(String setCode, String cardName) {
-        return setAndCardNameToMultiverseId.get(setCodeAndCardNameKey(setCode, cardName));
-    }
-
-    private void fetchFromCatalog(final ActivityCallback activityCallback, final String cardName) {
+    private void fetchFromCatalog(final ActivityCallback activityCallback, final String cardName, final boolean refresh) {
             catalogClient.getCardOwners(cardName, null, new AsyncJsonHttpResponseHandler() {
-                @Override
-                public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                    // If the response is JSONObject instead of expected JSONArray
-                    Log.d("CCG", "It was an object! " + response);
-                    throw new UnsupportedOperationException("Method not implemented.");
-                }
-
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, JSONArray array) {
                     String cardNameResult = cardName;
@@ -165,16 +174,19 @@ public class CardService {
                             JSONArray owners = (JSONArray) cardInfo.get("owners");
                             for (int j = 0, ownersSize = owners.length(); j < ownersSize; j++) {
                                 JSONObject owner = (JSONObject) owners.get(j);
-                                ownageList.add(new Ownage(owner.getString("username"), owner.getInt("ownedCount"), owner.getString("blockName")));
+                                ownageList.add(new Ownage(owner.getString("username"),
+                                                          owner.getInt("ownedCount"),
+                                                          owner.getString("blockName"),
+                                                          owner.getString("blockCode")));
                             }
                         } catch (JSONException e) {
-                            Log.e("CCG", "ERROR: " + e.getMessage());
+                            Log.e("CCG", "JSON parse error: " + e.getMessage());
                         }
                     }
 
                     CardOwners cardOwners = new CardOwners(cardNameResult, ownageList);
                     CARD_NAME_TO_OWNAGE_CACHE.put(cardName, cardOwners);
-                    activityCallback.updateOwners(cardOwners);
+                    activityCallback.cardDataUpdate(cardOwners, createEditableCard(cardOwners), refresh);
                 }
 
                 @Override
@@ -184,5 +196,53 @@ public class CardService {
                     activityCallback.makeToast("Failed to fetch card info " + cardName);
                 }
             });
+    }
+
+    private EditableCard createEditableCard(CardOwners cardOwners) {
+        return new EditableCard(cardOwners.getCardName(),
+                createBlockCodeToAmountList(getBlockCodesForCardName(cardOwners.getCardName()), cardOwners));
+    }
+
+    private List<BlockCodeToAmount> createBlockCodeToAmountList(List<String> blockCodesForCardName, CardOwners cardOwners) {
+        List<BlockCodeToAmount> result = new ArrayList<>();
+        List<Ownage> ownageList = cardOwners.getOwnageList();
+
+        for (String blockCode : blockCodesForCardName) {
+            result.add(findOwnedAmount(blockCode, ownageList));
+        }
+
+        return result;
+    }
+
+    private BlockCodeToAmount findOwnedAmount(String blockCode, List<Ownage> ownageList) {
+        for (Ownage ownage : ownageList) {
+            if (ownage.getOwner().equals(settings.getUsername()) &&
+                    blockCode.equals(ownage.getBlockCode())) {
+                return new BlockCodeToAmount(blockCode, ownage.getAmount());
+            }
+        }
+
+        return new BlockCodeToAmount(blockCode, 0);
+    }
+
+    public void sendUpdatedOwnagesToCatalog(final ActivityCallback activityCallback, List<EditableCard> editableCards) {
+        for (final EditableCard editableCard : editableCards) {
+            BlockCodeToAmount blockAndAmount = editableCard.getSelectedBlockAndAmount();
+            catalogClient.updateCard(getMultiverseId(blockAndAmount.getBlockCode(),
+                                                     editableCard.getName()),
+                                     blockAndAmount.getAmount() + editableCard.getDifference(),
+                    new AsyncJsonHttpResponseHandler() {
+                        @Override
+                        public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                            fetchAndUpdateOwnerData(activityCallback, editableCard.getName(), true);
+                        }
+
+                        @Override
+                        public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
+                            Log.e("CCG", "Failed to update. Response: " + responseString);
+                            activityCallback.makeToast("Failed to update card info " + editableCard.getName());
+                        }
+                    });
+        }
     }
 }
