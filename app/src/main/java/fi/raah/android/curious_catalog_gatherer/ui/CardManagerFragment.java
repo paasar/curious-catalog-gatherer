@@ -37,7 +37,16 @@ public class CardManagerFragment extends ListFragment {
         clearButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //TODO click twice
                 adapter.clear();
+            }
+        });
+
+        Button reverseDifferencesButton = (Button)view.findViewById(R.id.reverse_differences_button);
+        reverseDifferencesButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                adapter.reverseDifferences();
             }
         });
 

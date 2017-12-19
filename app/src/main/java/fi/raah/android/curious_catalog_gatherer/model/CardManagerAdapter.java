@@ -111,6 +111,13 @@ public class CardManagerAdapter extends ArrayAdapter<EditableCard> {
         }
     }
 
+    public void reverseDifferences() {
+        for (EditableCard editableCard : cardList) {
+            editableCard.reverseDifference();
+            notifyDataSetChanged();
+        }
+    }
+
     public List<EditableCard> getEditableCards() {
         return cardList;
     }

@@ -7,26 +7,34 @@
     android:background="@color/transparent_black_light"
     android:layout_margin="10dp">
 
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginBottom="10dp">
+        android:layout_marginBottom="10dp"
+        android:orientation="horizontal">
 
         <Button
             android:id="@+id/clear_cards_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:text="Clear"/>
+            android:layout_gravity="start"
+            android:text="Clear" />
+
+        <Button
+            android:id="@+id/reverse_differences_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="Reverse" />
 
         <Button
             android:id="@+id/update_cards_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:text="Save"/>
-    </RelativeLayout>
+            android:layout_gravity="end"
+            android:layout_marginStart="60dp"
+            android:text="Save" />
+    </LinearLayout>
 
     <ListView android:id="@android:id/list"
         android:layout_width="match_parent"

@@ -71,4 +71,8 @@ public class EditableCard implements Comparable<EditableCard> {
     public int compareTo(@NonNull EditableCard other) {
         return this.name.compareTo(other.getName());
     }
+
+    public void reverseDifference() {
+        this.difference = -difference;
+    }
 }
