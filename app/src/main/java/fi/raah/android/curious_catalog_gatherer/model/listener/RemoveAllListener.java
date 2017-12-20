@@ -5,28 +5,25 @@ import android.view.View;
 
 import fi.raah.android.curious_catalog_gatherer.ActivityCallback;
 import fi.raah.android.curious_catalog_gatherer.model.CardManagerAdapter;
-import fi.raah.android.curious_catalog_gatherer.model.EditableCard;
 
-public class RemoveListener implements View.OnClickListener {
+public class RemoveAllListener implements View.OnClickListener {
     private final ActivityCallback callback;
     private final CardManagerAdapter cardManagerAdapter;
-    private final EditableCard editableCard;
 
     private boolean clicked = false;
 
-    public RemoveListener(ActivityCallback callback, CardManagerAdapter cardManagerAdapter, EditableCard editableCard) {
+    public RemoveAllListener(ActivityCallback callback, CardManagerAdapter cardManagerAdapter) {
         this.callback = callback;
         this.cardManagerAdapter = cardManagerAdapter;
-        this.editableCard = editableCard;
         this.clicked = false;
     }
 
     @Override
     public void onClick(View v) {
         if (clicked) {
-            cardManagerAdapter.remove(editableCard);
+            cardManagerAdapter.clear();
         } else {
-            callback.makeToast("Click again to remove card.");
+            callback.makeToast("Click again to remove all cards.");
             resetAfterAWhile();
         }
         clicked = true;

@@ -18,6 +18,7 @@ import fi.raah.android.curious_catalog_gatherer.cards.CardService;
 import fi.raah.android.curious_catalog_gatherer.model.BlockCodeToAmount;
 import fi.raah.android.curious_catalog_gatherer.model.CardManagerAdapter;
 import fi.raah.android.curious_catalog_gatherer.model.EditableCard;
+import fi.raah.android.curious_catalog_gatherer.model.listener.RemoveAllListener;
 
 public class CardManagerFragment extends ListFragment {
 
@@ -34,13 +35,7 @@ public class CardManagerFragment extends ListFragment {
         listView.setEmptyView(view.findViewById(android.R.id.empty));
 
         Button clearButton = (Button)view.findViewById(R.id.clear_cards_button);
-        clearButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //TODO click twice
-                adapter.clear();
-            }
-        });
+        clearButton.setOnClickListener(new RemoveAllListener(activityCallback, adapter));
 
         Button reverseDifferencesButton = (Button)view.findViewById(R.id.reverse_differences_button);
         reverseDifferencesButton.setOnClickListener(new View.OnClickListener() {
