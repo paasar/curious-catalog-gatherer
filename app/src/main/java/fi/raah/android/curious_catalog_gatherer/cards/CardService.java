@@ -193,7 +193,13 @@ public class CardService {
                 public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
                     Log.e("CCG", "Failed to get card info " + cardName + " status: " + statusCode + " response: " + responseString);
                     super.onFailure(statusCode, headers, responseString, throwable);
-                    activityCallback.makeToast("Failed to fetch card info " + cardName);
+                    activityCallback.makeToast("Failed to fetch card info " + cardName + " (" + statusCode + ")");
+                }
+
+                @Override
+                public void onFailure(int statusCode, Header[] headers, Throwable t, JSONObject jsonObject) {
+                    Log.e("CCG", "Failed to get card info " + statusCode + " " + jsonObject);
+                    activityCallback.makeToast("Failed to fetch card info " + cardName + " (" + statusCode + ")");
                 }
             });
     }
