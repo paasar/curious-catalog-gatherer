@@ -217,7 +217,7 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
         // permission is not granted yet, request permission.
         int rc = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
         if (rc == PackageManager.PERMISSION_GRANTED) {
-            createCameraSource(autoFocus, useFlash, settings, catalogClient);
+            createCameraSource(autoFocus, useFlash, settings);
         } else {
             requestCameraPermission();
         }
@@ -319,7 +319,7 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
      * the constant.
      */
     @SuppressLint("InlinedApi")
-    private void createCameraSource(boolean autoFocus, boolean useFlash, Settings settings, CatalogClient catalogClient) {
+    private void createCameraSource(boolean autoFocus, boolean useFlash, Settings settings) {
         Context context = getApplicationContext();
 
         // Create the TextRecognizer
@@ -348,7 +348,7 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
                         .setRequestedPreviewSize(1280, 1024)
                         .setRequestedFps(15.0f)
                         .setFlashMode(useFlash ? Camera.Parameters.FLASH_MODE_TORCH : null)
-                        .setFocusMode(autoFocus ? Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE : null)
+                        .setFocusMode(autoFocus ? Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO : null)
                         .build();
     }
 
@@ -415,7 +415,7 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
             // We have permission, so create the camerasource
             boolean autoFocus = getIntent().getBooleanExtra(AutoFocus,false);
             boolean useFlash = getIntent().getBooleanExtra(UseFlash, false);
-            createCameraSource(autoFocus, useFlash, settings, catalogClient);
+            createCameraSource(autoFocus, useFlash, settings);
             return;
         }
 
