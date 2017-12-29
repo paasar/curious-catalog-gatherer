@@ -22,6 +22,7 @@ import android.util.SparseArray;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.text.TextBlock;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import fi.raah.android.curious_catalog_gatherer.cards.CardService;
@@ -37,6 +38,8 @@ public class OcrDetectorProcessor implements Detector.Processor<TextBlock> {
     private final ActivityCallback activityCallback;
     private final Settings settings;
     private GraphicOverlay<GraphicOverlay.Graphic> mGraphicOverlay;
+
+    private int noDetectionsCounter = 0;
 
     //TODO Dagger?
     private DetectionFilter detectionFilter;
@@ -65,26 +68,43 @@ public class OcrDetectorProcessor implements Detector.Processor<TextBlock> {
 
     private void processDetectedTextBlocks(SparseArray<TextBlock> items) {
         if (items.size() < 1) {
-            return;
-        }
+            noDetectionsCounter++;
+            if (noDetectionsCounter == 5) {
+                cardService.nextPhase();
+                noDetectionsCounter = 0;
+            }
+        } else {
+            noDetectionsCounter = 0;
 
-        List<TextBlock> singleLineBlocks = detectionFilter.filterSingleLineBlocks(items);
+            List<TextBlock> singleLineBlocks = detectionFilter.filterSingleLineBlocks(items);
 
-        DetectionFilter.CardAndNonCard cardAndNonCard = detectionFilter.splitIntoCardsAndNonCards(singleLineBlocks);
+            DetectionFilter.CardAndNonCard cardAndNonCard = detectionFilter.splitIntoCardsAndNonCards(singleLineBlocks);
 
-        for (TextBlock block : cardAndNonCard.getNonCardBlocks()) {
-            addGraphic(block, OcrGraphic.RED_COLOR);
-        }
+            annotateNonCardsInRed(cardAndNonCard.getNonCardBlocks());
 
-        for (TextBlock block : cardAndNonCard.getCardBlocks()) {
-            addGraphic(block, OcrGraphic.GREEN_COLOR);
-            if (settings.isSettingsOk()) {
-                cardService.fetchAndUpdateOwnerData(activityCallback, block.getValue());
+            annotateAndHandleCards(cardAndNonCard.getCardBlocks());
+
+            if (!settings.isSettingsOk()) {
+                activityCallback.makeToast("Settings need to be set for full functionality.");
             }
         }
+    }
 
-        if (!settings.isSettingsOk()) {
-            activityCallback.makeToast("Settings need to be set for full functionality.");
+    private void annotateAndHandleCards(List<TextBlock> cardBlocks) {
+        List<String> cardNames = new ArrayList<>();
+        for (TextBlock block : cardBlocks) {
+            addGraphic(block, OcrGraphic.GREEN_COLOR);
+            cardNames.add(block.getValue());
+        }
+
+        if (settings.isSettingsOk()) {
+            cardService.fetchAndUpdateData(activityCallback, cardNames);
+        }
+    }
+
+    private void annotateNonCardsInRed(List<TextBlock> nonCardBlocks) {
+        for (TextBlock block : nonCardBlocks) {
+            addGraphic(block, OcrGraphic.RED_COLOR);
         }
     }
 

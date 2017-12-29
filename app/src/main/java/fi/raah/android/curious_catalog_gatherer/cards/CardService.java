@@ -1,6 +1,7 @@
 package fi.raah.android.curious_catalog_gatherer.cards;
 
 import android.content.res.AssetManager;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -42,6 +44,8 @@ public class CardService {
     private final CatalogClient catalogClient;
 
     private final static ConcurrentHashMap<String, CardOwners> CARD_NAME_TO_OWNAGE_CACHE = new ConcurrentHashMap<>();
+
+    private final DetectionPhaseService detectionPhaseService = new DetectionPhaseService();
 
     public CardService(AssetManager assetManager, Settings settings, CatalogClient catalogClient) {
         initializeBlockCards(assetManager);
@@ -131,20 +135,39 @@ public class CardService {
         return cardNames.contains(text);
     }
 
-    public void fetchAndUpdateOwnerData(final ActivityCallback activityCallback, final String cardName) {
-        fetchAndUpdateOwnerData(activityCallback, cardName, false);
+    public void fetchAndUpdateData(ActivityCallback activityCallback, List<String> cardNames) {
+        Map<String, Integer> frequencies = getDetectedCardFrequencies(cardNames);
+
+        for (String cardName : frequencies.keySet()) {
+            DifferenceResult differenceResult = detectionPhaseService.updateAndResolveDifference(cardName, frequencies.get(cardName));
+            fetchAndUpdateOwnerData(activityCallback, cardName, differenceResult.getDifference(), differenceResult.isRefresh());
+        }
     }
 
-    private void fetchAndUpdateOwnerData(final ActivityCallback activityCallback, final String cardName, boolean refresh) {
+    @NonNull
+    private Map<String, Integer> getDetectedCardFrequencies(List<String> cardNames) {
+        Map<String, Integer> frequencies = new HashMap<>();
+        for (String cardName : cardNames) {
+            Integer occurences = frequencies.get(cardName);
+            if (occurences != null) {
+                frequencies.put(cardName, occurences + 1);
+            } else {
+                frequencies.put(cardName, 1);
+            }
+        }
+        return frequencies;
+    }
+
+    private void fetchAndUpdateOwnerData(final ActivityCallback activityCallback, final String cardName, int difference, boolean refresh) {
         if (refresh) {
             CARD_NAME_TO_OWNAGE_CACHE.remove(cardName);
         }
 
         if (CARD_NAME_TO_OWNAGE_CACHE.containsKey(cardName)) {
             CardOwners cardOwners = CARD_NAME_TO_OWNAGE_CACHE.get(cardName);
-            activityCallback.cardDataUpdate(cardOwners, createEditableCard(cardOwners), refresh);
+            activityCallback.cardDataUpdate(cardOwners, createEditableCard(cardOwners, difference), refresh);
         } else {
-            fetchFromCatalog(activityCallback, cardName, refresh);
+            fetchFromCatalog(activityCallback, cardName, difference, refresh);
         }
     }
 
@@ -158,7 +181,7 @@ public class CardService {
         }
     }
 
-    private void fetchFromCatalog(final ActivityCallback activityCallback, final String cardName, final boolean refresh) {
+    private void fetchFromCatalog(final ActivityCallback activityCallback, final String cardName, final int difference, final boolean refresh) {
             catalogClient.getCardOwners(cardName, null, new AsyncJsonHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, JSONArray array) {
@@ -186,7 +209,7 @@ public class CardService {
 
                     CardOwners cardOwners = new CardOwners(cardNameResult, ownageList);
                     CARD_NAME_TO_OWNAGE_CACHE.put(cardName, cardOwners);
-                    activityCallback.cardDataUpdate(cardOwners, createEditableCard(cardOwners), refresh);
+                    activityCallback.cardDataUpdate(cardOwners, createEditableCard(cardOwners, difference), refresh);
                 }
 
                 @Override
@@ -204,9 +227,10 @@ public class CardService {
             });
     }
 
-    private EditableCard createEditableCard(CardOwners cardOwners) {
+    private EditableCard createEditableCard(CardOwners cardOwners, int difference) {
         return new EditableCard(cardOwners.getCardName(),
-                createBlockCodeToAmountList(getBlockCodesForCardName(cardOwners.getCardName()), cardOwners));
+                createBlockCodeToAmountList(getBlockCodesForCardName(cardOwners.getCardName()), cardOwners),
+                difference);
     }
 
     private List<BlockCodeToAmount> createBlockCodeToAmountList(List<String> blockCodesForCardName, CardOwners cardOwners) {
@@ -240,7 +264,10 @@ public class CardService {
                     new AsyncJsonHttpResponseHandler() {
                         @Override
                         public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                            fetchAndUpdateOwnerData(activityCallback, editableCard.getName(), true);
+                            fetchAndUpdateOwnerData(activityCallback,
+                                                    editableCard.getName(),
+                                                    editableCard.getDifference(),
+                                                    true);
                         }
 
                         @Override
@@ -250,5 +277,21 @@ public class CardService {
                         }
                     });
         }
+    }
+
+    public void nextPhase() {
+        detectionPhaseService.nextPhase();
+    }
+
+    public void clearPhases() {
+        detectionPhaseService.clear();
+    }
+
+    public void increasePreviousDifference(String cardName) {
+        detectionPhaseService.increasePreviousDifference(cardName);
+    }
+
+    public void decreasePreviousDifference(String cardName) {
+        detectionPhaseService.decreasePreviousDifference(cardName);
     }
 }

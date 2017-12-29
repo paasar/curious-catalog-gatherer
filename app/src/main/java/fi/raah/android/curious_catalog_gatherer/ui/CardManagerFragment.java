@@ -35,7 +35,7 @@ public class CardManagerFragment extends ListFragment {
         listView.setEmptyView(view.findViewById(android.R.id.empty));
 
         Button clearButton = (Button)view.findViewById(R.id.clear_cards_button);
-        clearButton.setOnClickListener(new RemoveAllListener(activityCallback, adapter));
+        clearButton.setOnClickListener(new RemoveAllListener(activityCallback, adapter, cardService));
 
         Button reverseDifferencesButton = (Button)view.findViewById(R.id.reverse_differences_button);
         reverseDifferencesButton.setOnClickListener(new View.OnClickListener() {

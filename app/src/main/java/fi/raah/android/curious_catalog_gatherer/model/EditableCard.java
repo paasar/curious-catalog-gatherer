@@ -9,11 +9,12 @@ public class EditableCard implements Comparable<EditableCard> {
     private String name;
     private List<BlockCodeToAmount> blockCodeToAmounts;
     private int selectedBlockIndex = 0;
-    private int difference = 1;
+    private int difference;
 
-    public EditableCard(String name, List<BlockCodeToAmount> blockCodeToAmounts) {
+    public EditableCard(String name, List<BlockCodeToAmount> blockCodeToAmounts, int difference) {
         this.name = name;
         this.blockCodeToAmounts = blockCodeToAmounts;
+        this.difference = difference;
     }
 
     public String getName() {
@@ -57,8 +58,10 @@ public class EditableCard implements Comparable<EditableCard> {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         for(BlockCodeToAmount bcta : blockCodeToAmounts){
-            sb.append(bcta.getBlockCode() + "=" + bcta.getAmount());
-            sb.append(",");
+            sb.append(bcta.getBlockCode())
+              .append("=")
+              .append(bcta.getAmount())
+              .append(",");
         }
         return "EditableCard: " + name + ", " + sb.toString() + ", " + difference;
     }

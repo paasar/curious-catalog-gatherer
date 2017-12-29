@@ -103,7 +103,6 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
     private SettingsFragment settingsFragment;
 
     private Settings settings;
-    private CatalogClient catalogClient;
     private CardService cardService;
 
     private CardManagerFragment cardManagerFragment;
@@ -211,7 +210,7 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
         boolean useFlash = false;
 
         settings = new Settings(getPreferences(Context.MODE_PRIVATE));
-        catalogClient = new CatalogClient(this, settings);
+        CatalogClient catalogClient = new CatalogClient(this, settings);
         cardService = new CardService(getAssets(), settings, catalogClient);
         // Check for the camera permission before accessing the camera.  If the
         // permission is not granted yet, request permission.
@@ -239,7 +238,7 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
         ensureSettings();
 
         cardManagerFragment = new CardManagerFragment();
-        cardManagerAdapter = new CardManagerAdapter(this, new ArrayList<EditableCard>());
+        cardManagerAdapter = new CardManagerAdapter(this, cardService, new ArrayList<EditableCard>());
         cardManagerFragment.setAdapter(cardManagerAdapter);
         cardManagerFragment.setDependencies(this, cardService);
 

@@ -15,6 +15,7 @@ import java.util.List;
 
 import fi.raah.android.curious_catalog_gatherer.MainActivity;
 import fi.raah.android.curious_catalog_gatherer.R;
+import fi.raah.android.curious_catalog_gatherer.cards.CardService;
 import fi.raah.android.curious_catalog_gatherer.model.listener.BlockCodeListener;
 import fi.raah.android.curious_catalog_gatherer.model.listener.DecreaseListener;
 import fi.raah.android.curious_catalog_gatherer.model.listener.IncreaseListener;
@@ -23,12 +24,14 @@ import fi.raah.android.curious_catalog_gatherer.model.listener.RemoveListener;
 public class CardManagerAdapter extends ArrayAdapter<EditableCard> {
 
     private MainActivity activity;
+    private final CardService cardService;
     private final List<EditableCard> cardList;
 
-    public CardManagerAdapter(@NonNull MainActivity activity, @NonNull List<EditableCard> cardList) {
+    public CardManagerAdapter(@NonNull MainActivity activity, CardService cardService, @NonNull List<EditableCard> cardList) {
         super(activity, R.layout.edit_item, cardList);
 
         this.activity = activity;
+        this.cardService = cardService;
         this.cardList = cardList;
     }
 
@@ -68,8 +71,8 @@ public class CardManagerAdapter extends ArrayAdapter<EditableCard> {
         holder.cardName.setText(item.getName());
 
         holder.difference.setText(differenceAsString(item.getDifference()));
-        holder.increase.setOnClickListener(new IncreaseListener(this, item, holder.difference));
-        holder.decrease.setOnClickListener(new DecreaseListener(this, item, holder.difference));
+        holder.increase.setOnClickListener(new IncreaseListener(this, cardService, item, holder.difference));
+        holder.decrease.setOnClickListener(new DecreaseListener(this, cardService, item, holder.difference));
         holder.remove.setOnClickListener(new RemoveListener(activity, this, item));
 
         ArrayAdapter adapter = new ArrayAdapter<>(activity, R.layout.spinner_item, item.getBlockCodes());
