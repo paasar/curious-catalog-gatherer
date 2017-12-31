@@ -58,7 +58,7 @@
         android:layout_margin="3dp"
         android:maxLines="1"
         android:background="@color/white"
-        android:textSize="16sp"
+        android:textSize="14sp"
         android:textColor="@color/black"
         android:textColorHint="@color/gray"
         android:paddingEnd="3dp"
