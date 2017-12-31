@@ -15,7 +15,6 @@
  */
 package fi.raah.android.curious_catalog_gatherer;
 
-import android.content.res.AssetManager;
 import android.util.Log;
 import android.util.SparseArray;
 
@@ -26,12 +25,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fi.raah.android.curious_catalog_gatherer.cards.CardService;
-import fi.raah.android.curious_catalog_gatherer.http.CatalogClient;
 import fi.raah.android.curious_catalog_gatherer.ui.camera.GraphicOverlay;
 
 /**
- * A very simple Processor which gets detected TextBlocks and adds them to the overlay
- * as OcrGraphics.
+ * A OCR Processor which gets detected TextBlocks for card recognition.
  */
 public class OcrDetectorProcessor implements Detector.Processor<TextBlock> {
 
@@ -40,6 +37,7 @@ public class OcrDetectorProcessor implements Detector.Processor<TextBlock> {
     private GraphicOverlay<GraphicOverlay.Graphic> mGraphicOverlay;
 
     private int noDetectionsCounter = 0;
+    private boolean cardsDetected = false;
 
     //TODO Dagger?
     private DetectionFilter detectionFilter;
@@ -70,8 +68,7 @@ public class OcrDetectorProcessor implements Detector.Processor<TextBlock> {
         if (items.size() < 1) {
             noDetectionsCounter++;
             if (noDetectionsCounter == 5) {
-                cardService.nextPhase();
-                noDetectionsCounter = 0;
+                moveToNextPhase();
             }
         } else {
             noDetectionsCounter = 0;
@@ -90,7 +87,19 @@ public class OcrDetectorProcessor implements Detector.Processor<TextBlock> {
         }
     }
 
+    private void moveToNextPhase() {
+        cardService.nextPhase();
+        noDetectionsCounter = 0;
+
+        if (cardsDetected) {
+            mGraphicOverlay.add(new RectangleGraphic(mGraphicOverlay));
+        }
+        cardsDetected = false;
+    }
+
     private void annotateAndHandleCards(List<TextBlock> cardBlocks) {
+        cardsDetected = true;
+
         List<String> cardNames = new ArrayList<>();
         for (TextBlock block : cardBlocks) {
             addGraphic(block, OcrGraphic.GREEN_COLOR);
