@@ -26,6 +26,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -114,6 +115,8 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
     private MenuItem settingsItem;
     private Icons icons = new Icons();
 
+    private Uri intentData;
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -123,6 +126,21 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
         manageCardsItem = menu.findItem(R.id.action_manage_cards);
         settingsItem = menu.findItem(R.id.action_manage_settings);
         return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        // This is called here to ensure menu has been created for the icon change to work.
+        openSettingsIfIntentData();
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    private void openSettingsIfIntentData() {
+        if (intentData != null) {
+            toggleFragment(settingsFragment, settingsItem);
+            settingsFragment.settingsFromIntent(intentData.getHost(), intentData.getPath().substring(1));
+            intentData = null;
+        }
     }
 
     @Override
@@ -221,7 +239,6 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
             requestCameraPermission();
         }
 
-
         gestureDetector = new GestureDetector(this, new CaptureGestureListener());
 
         cardInfoFragment = new CardInfoFragment();
@@ -235,8 +252,6 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
         settingsFragment = new SettingsFragment();
         settingsFragment.setDependencies(settings, catalogClient);
 
-        ensureSettings();
-
         cardManagerFragment = new CardManagerFragment();
         cardManagerAdapter = new CardManagerAdapter(this, cardService, new ArrayList<EditableCard>());
         cardManagerFragment.setAdapter(cardManagerAdapter);
@@ -245,6 +260,13 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
         Snackbar.make(mGraphicOverlay, "Tap to refocus.",
                 Snackbar.LENGTH_LONG)
                 .show();
+
+        Uri data = getIntent().getData();
+        if (data != null && data.getHost() != null & data.getPath() != null) {
+            intentData = data;
+        } else {
+            ensureSettings();
+        }
     }
 
     private void ensureSettings() {

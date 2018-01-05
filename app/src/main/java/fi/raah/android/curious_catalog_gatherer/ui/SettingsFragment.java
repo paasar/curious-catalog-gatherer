@@ -25,15 +25,23 @@ public class SettingsFragment extends Fragment {
     private Settings settings;
     private CatalogClient catalogClient;
 
+    private TextInputEditText domainNameInput;
+    private TextInputEditText tokenInput;
+    private TextInputEditText usernameInput;
+    private TextView messageText;
+
+    private String domainNameFromIntent;
+    private String tokenFromIntent;
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.settings_fragment, container, false);
 
-        final TextInputEditText domainNameInput = (TextInputEditText)view.findViewById(R.id.catalog_domain_name_input);
-        final TextInputEditText tokenInput = (TextInputEditText)view.findViewById(R.id.catalog_token_input);
-        final TextInputEditText usernameInput = (TextInputEditText)view.findViewById(R.id.catalog_username_input);
-        final TextView messageText = (TextView)view.findViewById(R.id.settings_message);
+        domainNameInput = (TextInputEditText)view.findViewById(R.id.catalog_domain_name_input);
+        tokenInput = (TextInputEditText)view.findViewById(R.id.catalog_token_input);
+        usernameInput = (TextInputEditText)view.findViewById(R.id.catalog_username_input);
+        messageText = (TextView)view.findViewById(R.id.settings_message);
 
         domainNameInput.setText(settings.getCatalogDomainName());
         tokenInput.setText(settings.getCatalogToken());
@@ -65,6 +73,25 @@ public class SettingsFragment extends Fragment {
         return view;
     }
 
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        validateAndSaveDataFromIntent();
+    }
+
+    private void validateAndSaveDataFromIntent() {
+        if (domainNameFromIntent != null && tokenFromIntent != null) {
+            domainNameInput.setText(domainNameFromIntent);
+            tokenInput.setText(tokenFromIntent);
+            usernameInput.setText("");
+
+            validateAndSave(domainNameFromIntent, tokenFromIntent, messageText, usernameInput);
+
+            domainNameFromIntent = null;
+            tokenFromIntent = null;
+        }
+    }
+
     private void validateAndSave(final String domainName, final String token, final TextView messageText, final TextInputEditText usernameInput) {
         catalogClient.testToken(domainName, token, new AsyncJsonHttpResponseHandler() {
             @Override
@@ -91,5 +118,10 @@ public class SettingsFragment extends Fragment {
     public void setDependencies(Settings settings, CatalogClient catalogClient) {
         this.settings = settings;
         this.catalogClient = catalogClient;
+    }
+
+    public void settingsFromIntent(String domainName, String token) {
+        domainNameFromIntent = domainName;
+        tokenFromIntent = token;
     }
 }
