@@ -1,5 +1,6 @@
 package fi.raah.android.curious_catalog_gatherer.ui;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.util.Log;
@@ -13,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fi.raah.android.curious_catalog_gatherer.ActivityCallback;
+import fi.raah.android.curious_catalog_gatherer.MainActivity;
 import fi.raah.android.curious_catalog_gatherer.R;
 import fi.raah.android.curious_catalog_gatherer.cards.CardService;
 import fi.raah.android.curious_catalog_gatherer.model.BlockCodeToAmount;
@@ -26,6 +28,14 @@ public class CardManagerFragment extends ListFragment {
     private CardManagerAdapter adapter;
     private CardService cardService;
     private ActivityCallback activityCallback;
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        MainActivity activity = (MainActivity) context;
+        this.cardService = activity.getCardService();
+        this.activityCallback = activity;
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle inState) {
@@ -68,10 +78,5 @@ public class CardManagerFragment extends ListFragment {
 
     public void setAdapter(CardManagerAdapter adapter) {
         this.adapter = adapter;
-    }
-
-    public void setDependencies(ActivityCallback activityCallback, CardService cardService) {
-        this.activityCallback = activityCallback;
-        this.cardService = cardService;
     }
 }

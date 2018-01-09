@@ -20,7 +20,9 @@ public class CardInfoFragment extends ListFragment {
         cardNameView = (TextView)view.findViewById(R.id.card_name);
 
         CardInfoAdapter cardInfoAdapter = (CardInfoAdapter) getListAdapter();
-        cardNameView.setText(cardInfoAdapter.getCardName());
+        if (cardInfoAdapter != null) {
+            cardNameView.setText(cardInfoAdapter.getCardName());
+        }
 
         return view;
     }

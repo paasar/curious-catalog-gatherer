@@ -95,12 +95,24 @@
         android:orientation="vertical"
         android:layout_marginTop="30dp">
 
-        <Button
-            android:id="@+id/clear_setting_button"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:text="Clear"/>
+            android:layout_alignParentLeft="true">
+
+            <Button
+                android:id="@+id/clear_setting_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:text="Clear"/>
+
+            <Button
+                android:id="@+id/scan_qr_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Scan QR code"/>
+        </LinearLayout>
 
         <Button
             android:id="@+id/save_setting_button"

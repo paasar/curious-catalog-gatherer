@@ -56,6 +56,7 @@ import fi.raah.android.curious_catalog_gatherer.model.CardInfoAdapter;
 import fi.raah.android.curious_catalog_gatherer.model.CardManagerAdapter;
 import fi.raah.android.curious_catalog_gatherer.model.CardOwners;
 import fi.raah.android.curious_catalog_gatherer.model.CardOwnersHistoryQueue;
+import fi.raah.android.curious_catalog_gatherer.model.DomainAndToken;
 import fi.raah.android.curious_catalog_gatherer.model.EditableCard;
 import fi.raah.android.curious_catalog_gatherer.model.HistoryListAdapter;
 import fi.raah.android.curious_catalog_gatherer.model.Ownage;
@@ -69,9 +70,13 @@ import fi.raah.android.curious_catalog_gatherer.ui.camera.CameraSourcePreview;
 import fi.raah.android.curious_catalog_gatherer.ui.camera.GraphicOverlay;
 
 /**
- * Activity for the Ocr Detecting app.  This app detects text and displays the value with the
- * rear facing camera. During detection overlay graphics are drawn to indicate the position,
- * size, and contents of each TextBlock.
+ * Activity for the Magic: The Gathering card detecting app.
+ * This app detects MtG cards by their name. Card related ownage
+ * data is retrieved from a catalog service. In manage view (CardManagerFragment)
+ * user's own card ownages can be changed.
+ *
+ * During detection overlay graphics are drawn to indicate the position,
+ * size, and contents of each recognized text block.
  */
 public final class MainActivity extends AppCompatActivity implements ActivityCallback {
     private static final String TAG = "MainActivity";
@@ -95,6 +100,10 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
     private GestureDetector gestureDetector;
 
     //TODO Dagger
+    private Settings settings;
+    private CatalogClient catalogClient;
+    private CardService cardService;
+
     private CardInfoFragment cardInfoFragment;
     private CardInfoAdapter cardInfoAdapter;
 
@@ -102,9 +111,6 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
     private HistoryListAdapter historyListAdapter;
 
     private SettingsFragment settingsFragment;
-
-    private Settings settings;
-    private CardService cardService;
 
     private CardManagerFragment cardManagerFragment;
     private CardManagerAdapter cardManagerAdapter;
@@ -115,7 +121,50 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
     private MenuItem settingsItem;
     private Icons icons = new Icons();
 
-    private Uri intentData;
+    private DomainAndToken domainAndToken;
+    // This value tries to prevent an unnecessary "Configuration required" popup,
+    // but isn't doing a good job since the orientation changes when going to the scanner
+    // and back causes creation of new MainActivities.
+    private boolean returnFromQRScan = false;
+
+    /**
+     * Initializes the UI and creates the detector pipeline.
+     */
+    @Override
+    public void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
+        setContentView(R.layout.main_activity);
+
+        mPreview = (CameraSourcePreview) findViewById(R.id.preview);
+        mGraphicOverlay = (GraphicOverlay<GraphicOverlay.Graphic>) findViewById(R.id.graphicOverlay);
+
+        // Set good defaults for capturing text.
+        boolean autoFocus = true;
+        boolean useFlash = false;
+
+        // Check for the camera permission before accessing the camera.  If the
+        // permission is not granted yet, request permission.
+        int rc = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
+        if (rc == PackageManager.PERMISSION_GRANTED) {
+            createCameraSource(autoFocus, useFlash);
+        } else {
+            requestCameraPermission();
+        }
+
+        gestureDetector = new GestureDetector(this, new CaptureGestureListener());
+
+        Snackbar.make(mGraphicOverlay, "Tap to refocus.",
+                Snackbar.LENGTH_LONG)
+                .show();
+
+        storeIntentDataIfExists();
+    }
+
+    private void ensureSettings() {
+        if (!settings.isSettingsOk()) {
+            requestConfiguration();
+        }
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -136,10 +185,8 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
     }
 
     private void openSettingsIfIntentData() {
-        if (intentData != null) {
-            toggleFragment(settingsFragment, settingsItem);
-            settingsFragment.settingsFromIntent(intentData.getHost(), intentData.getPath().substring(1));
-            intentData = null;
+        if (domainAndToken != null) {
+            showFragment(settingsFragment, settingsItem);
         }
     }
 
@@ -176,14 +223,13 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
 
         if (fragment.isAdded()) {
             if (fragment.isVisible()) {
-                ft.hide(fragment);
-                item.setIcon(icons.off(item.getItemId()));
+                hideFragment(fragment, item, ft);
             } else {
                 ft.show(fragment);
                 item.setIcon(icons.on(item.getItemId()));
             }
         } else {
-            ft.add(R.id.fragment_container, fragment);
+            ft.replace(R.id.fragment_container, fragment);
             ft.show(fragment);
             item.setIcon(icons.on(item.getItemId()));
         }
@@ -193,85 +239,40 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
         ft.commit();
     }
 
+    protected void showFragment(Fragment fragment, MenuItem item) {
+        FragmentManager fm = getSupportFragmentManager();
+        FragmentTransaction ft = fm.beginTransaction();
+
+        if (!fragment.isAdded()) {
+            ft.replace(R.id.fragment_container, fragment);
+        }
+        ft.show(fragment);
+        item.setIcon(icons.on(item.getItemId()));
+
+        hideOtherFragments(ft, fragment);
+
+        ft.commit();
+    }
+
+    private void hideFragment(Fragment fragment, MenuItem item, FragmentTransaction ft) {
+        ft.hide(fragment);
+        if (item != null) {
+            item.setIcon(icons.off(item.getItemId()));
+        }
+    }
+
     private void hideOtherFragments(FragmentTransaction ft, Fragment fragment) {
         if (fragment != cardInfoFragment) {
-            ft.hide(cardInfoFragment);
-            cardInfoItem.setIcon(icons.off(cardInfoItem.getItemId()));
+            hideFragment(cardInfoFragment, cardInfoItem, ft);
         }
         if (fragment != historyFragment) {
-            ft.hide(historyFragment);
-            historyItem.setIcon(icons.off(historyItem.getItemId()));
+            hideFragment(historyFragment, historyItem, ft);
         }
         if (fragment != cardManagerFragment) {
-            ft.hide(cardManagerFragment);
-            manageCardsItem.setIcon(icons.off(manageCardsItem.getItemId()));
+            hideFragment(cardManagerFragment, manageCardsItem, ft);
         }
         if (fragment != settingsFragment) {
-            ft.hide(settingsFragment);
-            settingsItem.setIcon(icons.off(settingsItem.getItemId()));
-        }
-    }
-
-    /**
-     * Initializes the UI and creates the detector pipeline.
-     */
-    @Override
-    public void onCreate(Bundle bundle) {
-        super.onCreate(bundle);
-        setContentView(R.layout.main_activity);
-
-        mPreview = (CameraSourcePreview) findViewById(R.id.preview);
-        mGraphicOverlay = (GraphicOverlay<GraphicOverlay.Graphic>) findViewById(R.id.graphicOverlay);
-
-        // Set good defaults for capturing text.
-        boolean autoFocus = true;
-        boolean useFlash = false;
-
-        settings = new Settings(getPreferences(Context.MODE_PRIVATE));
-        CatalogClient catalogClient = new CatalogClient(this, settings);
-        cardService = new CardService(getAssets(), settings, catalogClient);
-        // Check for the camera permission before accessing the camera.  If the
-        // permission is not granted yet, request permission.
-        int rc = ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
-        if (rc == PackageManager.PERMISSION_GRANTED) {
-            createCameraSource(autoFocus, useFlash, settings);
-        } else {
-            requestCameraPermission();
-        }
-
-        gestureDetector = new GestureDetector(this, new CaptureGestureListener());
-
-        cardInfoFragment = new CardInfoFragment();
-        cardInfoAdapter = new CardInfoAdapter(this, new ArrayList<Ownage>());
-        cardInfoFragment.setListAdapter(cardInfoAdapter);
-
-        historyFragment = new HistoryFragment();
-        historyListAdapter = new HistoryListAdapter(this, new CardOwnersHistoryQueue(50));
-        historyFragment.setAdapter(historyListAdapter);
-
-        settingsFragment = new SettingsFragment();
-        settingsFragment.setDependencies(settings, catalogClient);
-
-        cardManagerFragment = new CardManagerFragment();
-        cardManagerAdapter = new CardManagerAdapter(this, cardService, new ArrayList<EditableCard>());
-        cardManagerFragment.setAdapter(cardManagerAdapter);
-        cardManagerFragment.setDependencies(this, cardService);
-
-        Snackbar.make(mGraphicOverlay, "Tap to refocus.",
-                Snackbar.LENGTH_LONG)
-                .show();
-
-        Uri data = getIntent().getData();
-        if (data != null && data.getHost() != null & data.getPath() != null) {
-            intentData = data;
-        } else {
-            ensureSettings();
-        }
-    }
-
-    private void ensureSettings() {
-        if (!settings.isSettingsOk()) {
-            requestConfiguration();
+            hideFragment(settingsFragment, settingsItem, ft);
         }
     }
 
@@ -311,8 +312,7 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
         DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-
-                toggleFragment(settingsFragment, settingsItem);
+                showFragment(settingsFragment, settingsItem);
             }
         };
 
@@ -340,13 +340,13 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
      * the constant.
      */
     @SuppressLint("InlinedApi")
-    private void createCameraSource(boolean autoFocus, boolean useFlash, Settings settings) {
+    private void createCameraSource(boolean autoFocus, boolean useFlash) {
         Context context = getApplicationContext();
 
         // Create the TextRecognizer
         TextRecognizer textRecognizer = new TextRecognizer.Builder(context).build();
         // Set the TextRecognizer's Processor.
-        textRecognizer.setProcessor(new OcrDetectorProcessor(mGraphicOverlay, this, settings, cardService));
+        textRecognizer.setProcessor(new OcrDetectorProcessor(mGraphicOverlay, this, getSettings(), getCardService()));
         // Check if the TextRecognizer is operational.
         if (!textRecognizer.isOperational()) {
             Log.w(TAG, "Detector dependencies are not yet available.");
@@ -373,24 +373,62 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
                         .build();
     }
 
-    /**
-     * Restarts the camera.
-     */
+    @Override
+    protected void onStart() {
+        settings = getSettings();
+        catalogClient = getCatalogClient();
+        cardService = getCardService();
+
+        cardInfoFragment = new CardInfoFragment();
+        cardInfoAdapter = new CardInfoAdapter(this, new ArrayList<Ownage>());
+        cardInfoFragment.setListAdapter(cardInfoAdapter);
+
+        historyFragment = new HistoryFragment();
+        historyListAdapter = new HistoryListAdapter(this, new CardOwnersHistoryQueue(50));
+        historyFragment.setAdapter(historyListAdapter);
+
+        settingsFragment = new SettingsFragment();
+
+        cardManagerFragment = new CardManagerFragment();
+        cardManagerAdapter = new CardManagerAdapter(this, getCardService(), new ArrayList<EditableCard>());
+        cardManagerFragment.setAdapter(cardManagerAdapter);
+
+        super.onStart();
+    }
+
+    private void storeIntentDataIfExists() {
+        Uri data = getIntent().getData();
+        if (domainAndToken == null && (data != null && data.getHost() != null & data.getPath() != null)) {
+            domainAndToken = new DomainAndToken(data.getHost(), data.getPath().substring(1));
+        }
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
         startCameraSource();
+
+        if (!returnFromQRScan && domainAndToken == null) {
+            ensureSettings();
+        }
     }
 
-    /**
-     * Stops the camera.
-     */
     @Override
     protected void onPause() {
         super.onPause();
         if (mPreview != null) {
             mPreview.stop();
         }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        cardInfoFragment = null;
+        historyFragment = null;
+        settingsFragment = null;
+        cardManagerFragment = null;
     }
 
     /**
@@ -436,7 +474,7 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
             // We have permission, so create the camerasource
             boolean autoFocus = getIntent().getBooleanExtra(AutoFocus,false);
             boolean useFlash = getIntent().getBooleanExtra(UseFlash, false);
-            createCameraSource(autoFocus, useFlash, settings);
+            createCameraSource(autoFocus, useFlash);
             return;
         }
 
@@ -487,6 +525,35 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
         return false;
     }
 
+    public Settings getSettings() {
+        if (settings == null) {
+            settings = new Settings(getPreferences(Context.MODE_PRIVATE));
+        }
+        return settings;
+    }
+
+    public CatalogClient getCatalogClient() {
+        if (catalogClient == null) {
+            catalogClient = new CatalogClient(this, getSettings());
+        }
+        return catalogClient;
+    }
+
+    public CardService getCardService() {
+        if (cardService == null) {
+            cardService = new CardService(getAssets(), getSettings(), getCatalogClient());
+        }
+        return cardService;
+    }
+
+    public DomainAndToken getDomainAndToken() {
+        return domainAndToken;
+    }
+
+    public void resetReturnFromQRScan() {
+        returnFromQRScan = false;
+    }
+
     private class CaptureGestureListener extends GestureDetector.SimpleOnGestureListener {
 
         @Override
@@ -522,5 +589,11 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
                 Toast.makeText(activity, message, Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        returnFromQRScan = true;
+        super.onActivityResult(requestCode, resultCode, data);
     }
 }
