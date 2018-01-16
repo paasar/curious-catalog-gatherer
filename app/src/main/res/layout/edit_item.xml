@@ -5,26 +5,31 @@
     android:orientation="horizontal"
     android:layout_margin="5dp">
 
-    <Button
-        android:id="@+id/editListItem_remove"
-        android:layout_width="40dp"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:text="@string/remove"/>
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/editListItem_cardName"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/transparent_black_light"
-            android:paddingBottom="5dp"
-            android:paddingTop="5dp"
-            android:textSize="18sp" />
+            android:layout_height="wrap_content">
+
+            <Button
+                android:id="@+id/editListItem_remove"
+                android:layout_width="40dp"
+                android:layout_height="wrap_content"
+                android:text="@string/remove"/>
+
+            <TextView
+                android:id="@+id/editListItem_cardName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/transparent_black_light"
+                android:paddingBottom="5dp"
+                android:paddingStart="3dp"
+                android:paddingTop="5dp"
+                android:textSize="18sp" />
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -35,7 +40,7 @@
                 android:id="@+id/editListItem_blockCodeSpinner"
                 android:layout_width="100dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"/>
+                android:layout_marginStart="2dp"/>
 
             <TextView
                 android:id="@+id/editListItem_ownedCount"
@@ -53,16 +58,16 @@
 
             <Button
                 android:id="@+id/editListItem_increase"
-                android:layout_width="60dp"
+                android:layout_width="55dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="5dp"
+                android:layout_marginStart="2dp"
                 android:text="@string/plus"/>
 
             <Button
                 android:id="@+id/editListItem_decrease"
-                android:layout_width="60dp"
+                android:layout_width="55dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="5dp"
+                android:layout_marginStart="2dp"
                 android:text="@string/minus"/>
         </LinearLayout>
     </LinearLayout>
