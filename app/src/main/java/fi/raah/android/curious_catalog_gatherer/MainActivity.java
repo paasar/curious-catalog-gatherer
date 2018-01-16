@@ -161,7 +161,7 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
     }
 
     private void ensureSettings() {
-        if (!settings.isSettingsOk()) {
+        if (!settings.isSettingsOk() && !isSettingsFragmentVisible()) {
             requestConfiguration();
         }
     }
@@ -552,6 +552,17 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
 
     public void resetReturnFromQRScan() {
         returnFromQRScan = false;
+    }
+
+    private boolean isSettingsFragmentVisible() {
+        FragmentManager fm = getSupportFragmentManager();
+        for (Fragment fragment : fm.getFragments()) {
+            if (fragment instanceof SettingsFragment) {
+                return fragment.isVisible();
+            }
+        }
+
+        return false;
     }
 
     private class CaptureGestureListener extends GestureDetector.SimpleOnGestureListener {
