@@ -124,4 +124,13 @@ public class CardManagerAdapter extends ArrayAdapter<EditableCard> {
     public List<EditableCard> getEditableCards() {
         return cardList;
     }
+
+    public EditableCardCounts getEditableCardCounts() {
+        int total = 0;
+        for (EditableCard editableCard : cardList) {
+            total += Math.abs(editableCard.getDifference());
+        }
+
+        return new EditableCardCounts(cardList.size(), total);
+    }
 }

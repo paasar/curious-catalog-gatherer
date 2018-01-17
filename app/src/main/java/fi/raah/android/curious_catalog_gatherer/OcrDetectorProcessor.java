@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fi.raah.android.curious_catalog_gatherer.cards.CardService;
+import fi.raah.android.curious_catalog_gatherer.model.EditableCardCounts;
 import fi.raah.android.curious_catalog_gatherer.ui.camera.GraphicOverlay;
 
 /**
@@ -85,6 +86,13 @@ public class OcrDetectorProcessor implements Detector.Processor<TextBlock> {
                 activityCallback.makeToast("Settings need to be set for full functionality.");
             }
         }
+
+        annotateEditableCardCounts();
+    }
+
+    private void annotateEditableCardCounts() {
+        EditableCardCounts cardCounts = activityCallback.getEditableCardCounts();
+        mGraphicOverlay.add(new TextGraphic(mGraphicOverlay, cardCounts.getTotal() + "|" + cardCounts.getUnique()));
     }
 
     private void moveToNextPhase() {

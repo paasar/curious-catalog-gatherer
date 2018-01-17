@@ -58,6 +58,7 @@ import fi.raah.android.curious_catalog_gatherer.model.CardOwners;
 import fi.raah.android.curious_catalog_gatherer.model.CardOwnersHistoryQueue;
 import fi.raah.android.curious_catalog_gatherer.model.DomainAndToken;
 import fi.raah.android.curious_catalog_gatherer.model.EditableCard;
+import fi.raah.android.curious_catalog_gatherer.model.EditableCardCounts;
 import fi.raah.android.curious_catalog_gatherer.model.HistoryListAdapter;
 import fi.raah.android.curious_catalog_gatherer.model.Ownage;
 import fi.raah.android.curious_catalog_gatherer.ui.CardInfoFragment;
@@ -606,5 +607,10 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         returnFromQRScan = true;
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    public EditableCardCounts getEditableCardCounts() {
+        return cardManagerAdapter.getEditableCardCounts();
     }
 }
