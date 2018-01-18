@@ -111,7 +111,7 @@ public class OcrDetectorProcessor implements Detector.Processor<TextBlock> {
         List<String> cardNames = new ArrayList<>();
         for (TextBlock block : cardBlocks) {
             addGraphic(block, OcrGraphic.GREEN_COLOR);
-            cardNames.add(block.getValue());
+            cardNames.add(CardService.removeBracketsFromStart(block.getValue()));
         }
 
         if (settings.isSettingsOk()) {
@@ -126,7 +126,7 @@ public class OcrDetectorProcessor implements Detector.Processor<TextBlock> {
     }
 
     private void addGraphic(TextBlock block, int color) {
-        OcrGraphic graphic = new OcrGraphic(mGraphicOverlay, block, color);
+        OcrGraphic graphic = new OcrGraphic(mGraphicOverlay, block, CardService.removeBracketsFromStart(block.getValue()), color);
         mGraphicOverlay.add(graphic);
     }
 

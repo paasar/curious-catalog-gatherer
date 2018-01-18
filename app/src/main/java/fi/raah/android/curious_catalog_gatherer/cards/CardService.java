@@ -294,4 +294,13 @@ public class CardService {
     public void decreasePreviousDifference(String cardName) {
         detectionPhaseService.decreasePreviousDifference(cardName);
     }
+
+    /**
+     *  Removes all opening round brackets "(" from the start of the text.
+     *  This is used because many times the round left edge of the graphic
+     *  under the card name is interpreted as a bracket.
+     */
+    public static String removeBracketsFromStart(String text) {
+        return text.replaceFirst("^\\(+", "");
+    }
 }

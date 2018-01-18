@@ -1,6 +1,5 @@
 package fi.raah.android.curious_catalog_gatherer;
 
-import android.util.Log;
 import android.util.SparseArray;
 
 import com.google.android.gms.vision.text.Line;
@@ -38,7 +37,7 @@ public class DetectionFilter {
         CardAndNonCard result = new CardAndNonCard();
 
         for (TextBlock block : blocks) {
-            if (cardService.isCardName(block.getValue())) {
+            if (cardService.isCardName(CardService.removeBracketsFromStart(block.getValue()))) {
                 result.addCardBlock(block);
             } else {
                 result.addNonCardBlock(block);

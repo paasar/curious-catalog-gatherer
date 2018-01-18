@@ -19,7 +19,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
-import android.util.Log;
 
 import com.google.android.gms.vision.text.Text;
 import com.google.android.gms.vision.text.TextBlock;
@@ -41,12 +40,14 @@ public class OcrGraphic extends GraphicOverlay.Graphic {
 
     private Paint sRectPaint;
     private Paint sTextPaint;
-    private final TextBlock mText;
+    private final TextBlock mTextBlock;
+    private final String overridingText;
 
-    OcrGraphic(GraphicOverlay overlay, TextBlock text, int color) {
+    OcrGraphic(GraphicOverlay overlay, TextBlock textBlock, String overridingText, int color) {
         super(overlay);
 
-        mText = text;
+        mTextBlock = textBlock;
+        this.overridingText = overridingText;
 
         if (sRectPaint == null) {
             sRectPaint = new Paint();
@@ -59,7 +60,7 @@ public class OcrGraphic extends GraphicOverlay.Graphic {
             sTextPaint = new Paint();
             sTextPaint.setColor(color);
 
-            float textHeight = (float) text.getBoundingBox().height() * 2;
+            float textHeight = (float) textBlock.getBoundingBox().height() * 2;
             sTextPaint.setTextSize(textHeight);
         }
         // Redraw the overlay, as this graphic has been added.
@@ -75,7 +76,7 @@ public class OcrGraphic extends GraphicOverlay.Graphic {
     }
 
     public TextBlock getTextBlock() {
-        return mText;
+        return mTextBlock;
     }
 
     /**
@@ -86,11 +87,11 @@ public class OcrGraphic extends GraphicOverlay.Graphic {
      * @return True if the provided point is contained within this graphic's bounding box.
      */
     public boolean contains(float x, float y) {
-        // TODO: Check if this graphic's text contains this point.
-        if (mText == null) {
+        // TODO: Check if this graphic's overridingText contains this point.
+        if (mTextBlock == null) {
             return false;
         }
-        RectF rect = new RectF(mText.getBoundingBox());
+        RectF rect = new RectF(mTextBlock.getBoundingBox());
         rect.left = translateX(rect.left);
         rect.top = translateY(rect.top);
         rect.right = translateX(rect.right);
@@ -103,13 +104,13 @@ public class OcrGraphic extends GraphicOverlay.Graphic {
      */
     @Override
     public void draw(Canvas canvas) {
-        // TODO: Draw the text onto the canvas.
-        if (mText == null) {
+        // TODO: Draw the overridingText onto the canvas.
+        if (mTextBlock == null) {
             return;
         }
 
         // Draws the bounding box around the TextBlock.
-        RectF rect = new RectF(mText.getBoundingBox());
+        RectF rect = new RectF(mTextBlock.getBoundingBox());
         rect.left = translateX(rect.left);
         rect.top = translateY(rect.top);
         rect.right = translateX(rect.right);
@@ -117,11 +118,15 @@ public class OcrGraphic extends GraphicOverlay.Graphic {
         canvas.drawRect(rect, sRectPaint);
 
         // Break the text into multiple lines and draw each one according to its own bounding box.
-        List<? extends Text> textComponents = mText.getComponents();
+        List<? extends Text> textComponents = mTextBlock.getComponents();
         for(Text currentText : textComponents) {
             float left = translateX(currentText.getBoundingBox().left);
             float bottom = translateY(currentText.getBoundingBox().bottom);
-            canvas.drawText(currentText.getValue(), left, bottom, sTextPaint);
+            if (overridingText == null) {
+                canvas.drawText(currentText.getValue(), left, bottom, sTextPaint);
+            } else {
+                canvas.drawText(overridingText, left, bottom, sTextPaint);
+            }
         }
     }
 }
