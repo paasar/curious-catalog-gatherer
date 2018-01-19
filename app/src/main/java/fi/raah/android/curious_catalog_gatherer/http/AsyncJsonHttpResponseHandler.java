@@ -30,13 +30,17 @@ public class AsyncJsonHttpResponseHandler extends JsonHttpResponseHandler {
     @Override
     public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
         Log.d("CCG", "It was a failure! " + responseString);
-        throw new UnsupportedOperationException("onFailure responseString method not implemented. (" + statusCode + ")");
+        throw new UnsupportedOperationException(
+                "onFailure responseString method not implemented. (" + statusCode + ") " +
+                " Error: " + throwable.getMessage());
     }
 
 
     @Override
-    public void onFailure(int statusCode, Header[] headers, Throwable t, JSONObject jsonObject) {
+    public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject jsonObject) {
         Log.e("CCG", "Failed to get card info " + statusCode + " " + jsonObject);
-        throw new UnsupportedOperationException("onFailure jsonObject method not implemented. (" + statusCode + ")");
+        throw new UnsupportedOperationException(
+                "onFailure jsonObject method not implemented. (" + statusCode + ")" +
+                " Error: " + throwable.getMessage());
     }
 }

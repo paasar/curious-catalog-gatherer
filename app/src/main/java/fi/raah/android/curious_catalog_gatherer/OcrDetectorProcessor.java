@@ -83,7 +83,7 @@ public class OcrDetectorProcessor implements Detector.Processor<TextBlock> {
             annotateAndHandleCards(cardAndNonCard.getCardBlocks());
 
             if (!settings.isSettingsOk()) {
-                activityCallback.makeToast("Settings need to be set for full functionality.");
+                activityCallback.makeShortToast("Settings need to be set for full functionality.");
             }
         }
 

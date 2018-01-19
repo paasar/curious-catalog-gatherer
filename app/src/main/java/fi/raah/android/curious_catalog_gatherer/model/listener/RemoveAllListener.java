@@ -27,7 +27,7 @@ public class RemoveAllListener implements View.OnClickListener {
             cardManagerAdapter.clear();
             cardService.clearPhases();
         } else {
-            callback.makeToast("Click again to remove all cards.");
+            callback.makeShortToast("Click again to remove all cards.");
             resetAfterAWhile();
         }
         clicked = true;

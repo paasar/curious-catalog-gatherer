@@ -594,12 +594,21 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
     }
 
     @Override
-    public void makeToast(final String message) {
+    public void makeShortToast(final String message) {
+        makeToast(message, Toast.LENGTH_SHORT);
+    }
+
+    @Override
+    public void makeLongToast(final String message) {
+        makeToast(message, Toast.LENGTH_LONG);
+    }
+
+    private void makeToast(final String message, final int toastLength) {
         final Activity activity = this;
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(activity, message, Toast.LENGTH_SHORT).show();
+                Toast.makeText(activity, message, toastLength).show();
             }
         });
     }

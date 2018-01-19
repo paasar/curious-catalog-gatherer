@@ -146,12 +146,16 @@ public class SettingsFragment extends Fragment {
 
             @Override
             public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject errorResponse) {
-                messageText.setText("Could not connect. Please, check the settings. Error code was: " + statusCode);
+                messageText.setText(
+                        "Could not connect. Please, check the settings. Error was: " + statusCode +
+                        " " + throwable.getMessage());
             }
 
             @Override
             public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
-                messageText.setText("Could not connect. Please, check the settings. Error code was: " + statusCode);
+                messageText.setText(
+                        "Could not connect. Please, check the settings. Error was: " + statusCode +
+                        " " + throwable.getMessage());
             }
         });
     }
@@ -171,7 +175,7 @@ public class SettingsFragment extends Fragment {
                 }
             }
             if (resultCode == RESULT_CANCELED){
-                activity.makeToast("QR code reading was cancelled.");
+                activity.makeShortToast("QR code reading was cancelled.");
             }
         }
         activity.resetReturnFromQRScan();

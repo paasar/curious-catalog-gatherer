@@ -215,14 +215,17 @@ public class CardService {
                 @Override
                 public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
                     Log.e("CCG", "Failed to get card info " + cardName + " status: " + statusCode + " response: " + responseString);
-                    super.onFailure(statusCode, headers, responseString, throwable);
-                    activityCallback.makeToast("Failed to fetch card info " + cardName + " (" + statusCode + ")");
+                    activityCallback.makeLongToast(
+                            "Failed to fetch card info " + cardName + " (" + statusCode + ")" +
+                            " Error: " + throwable.getMessage());
                 }
 
                 @Override
-                public void onFailure(int statusCode, Header[] headers, Throwable t, JSONObject jsonObject) {
+                public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject jsonObject) {
                     Log.e("CCG", "Failed to get card info " + statusCode + " " + jsonObject);
-                    activityCallback.makeToast("Failed to fetch card info " + cardName + " (" + statusCode + ")");
+                    activityCallback.makeLongToast(
+                            "Failed to fetch card info " + cardName + " (" + statusCode + ")" +
+                            " Error: " + throwable.getMessage());
                 }
             });
     }
@@ -273,7 +276,17 @@ public class CardService {
                         @Override
                         public void onFailure(int statusCode, Header[] headers, String responseString, Throwable throwable) {
                             Log.e("CCG", "Failed to update. Response: " + responseString);
-                            activityCallback.makeToast("Failed to update card info " + editableCard.getName());
+                            activityCallback.makeShortToast(
+                                    "Failed to update card info " + editableCard.getName() +
+                                    " Error: " + throwable.getMessage());
+                        }
+
+                        @Override
+                        public void onFailure(int statusCode, Header[] headers, Throwable throwable, JSONObject jsonObject) {
+                            Log.e("CCG", "Failed to update. Response: " + jsonObject);
+                            activityCallback.makeShortToast(
+                                    "Failed to update card info " + editableCard.getName() +
+                                            " Error: " + throwable.getMessage());
                         }
                     });
         }

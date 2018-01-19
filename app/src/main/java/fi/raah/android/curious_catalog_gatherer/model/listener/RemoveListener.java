@@ -26,7 +26,7 @@ public class RemoveListener implements View.OnClickListener {
         if (clicked) {
             cardManagerAdapter.remove(editableCard);
         } else {
-            callback.makeToast("Click again to remove card.");
+            callback.makeShortToast("Click again to remove card.");
             resetAfterAWhile();
         }
         clicked = true;
