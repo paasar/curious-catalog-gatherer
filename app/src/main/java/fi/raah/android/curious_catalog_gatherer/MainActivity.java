@@ -237,6 +237,7 @@ public final class MainActivity extends AppCompatActivity implements ActivityCal
 
         hideOtherFragments(ft, fragment);
 
+        ft.addToBackStack(null);//TODO this does not change the icons
         ft.commit();
     }
 
