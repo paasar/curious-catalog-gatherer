@@ -27,7 +27,7 @@ public class RectangleGraphic extends GraphicOverlay.Graphic {
     @Override
     public void draw(Canvas canvas) {
         RectF rect = new RectF();
-        rect.set(MARGIN, MARGIN, canvas.getWidth() - MARGIN, canvas.getHeight() - MARGIN);
+        rect.set(MARGIN, MARGIN * 4, canvas.getWidth() - MARGIN, canvas.getHeight() - MARGIN);
 
         canvas.drawRect(rect, sRectPaint);
     }
