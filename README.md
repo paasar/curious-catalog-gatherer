@@ -6,7 +6,9 @@ An Android application to recognize Magic: The Gathering cards.
 
 Uses Google's Mobile Vision API for text recognition.
 
-## TBD
+Planned functionality is now there but error handling and prettying up the UI and code is not yet done.
+
+## Good to know
    * Uses a third party catalog service to query card owners with owned amounts
    * Uses a third party catalog service to manage own cards
 
