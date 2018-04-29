@@ -39,6 +39,7 @@ public class OcrDetectorProcessor implements Detector.Processor<TextBlock> {
 
     private int noDetectionsCounter = 0;
     private boolean cardsDetected = false;
+    private int nagWaitCounter = 20;
 
     //TODO Dagger?
     private DetectionFilter detectionFilter;
@@ -83,7 +84,12 @@ public class OcrDetectorProcessor implements Detector.Processor<TextBlock> {
             annotateAndHandleCards(cardAndNonCard.getCardBlocks());
 
             if (!settings.isSettingsOk()) {
-                activityCallback.makeShortToast("Settings need to be set for full functionality.");
+                if (nagWaitCounter >= 20) {
+                    nagWaitCounter = 0;
+                    activityCallback.makeShortToast("Settings need to be set for full functionality.");
+                } else {
+                    nagWaitCounter++;
+                }
             }
         }
 
